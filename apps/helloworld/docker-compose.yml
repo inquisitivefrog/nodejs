@@ -1,0 +1,27 @@
+services:
+  helloworld:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nodejs-helloworld
+  
+  node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nodejs-dev
+    volumes:
+      - .:/app
+      - /app/node_modules  # Preserve node_modules from image
+    working_dir: /app
+    command: tail -f /dev/null  # Keep container running
+    stdin_open: true
+    tty: true
+  
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nodejs-helloworld-test
+    command: npm test
+

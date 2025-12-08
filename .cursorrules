@@ -1,0 +1,46 @@
+# Node.js Development Guidelines
+
+## Language & Framework
+- Primary language: JavaScript/TypeScript
+- Use Node.js LTS versions
+- Prefer TypeScript for new projects
+- Use modern ES6+ features
+
+## Code Style
+- Use ESLint for linting
+- Use Prettier for code formatting
+- Follow Node.js best practices
+- Use async/await instead of callbacks
+- Prefer const/let over var
+
+## Testing
+- Use Jest or Vitest for unit and integration tests
+- Write tests for all new features
+- Aim for high test coverage
+- Use descriptive test names
+
+## Package Management
+- Use npm or yarn (specify which in project)
+- Keep package.json dependencies up to date
+- Use exact versions for production dependencies when appropriate
+- Run security audits regularly
+
+## Project Structure
+- Follow Node.js project conventions
+- Separate concerns (routes, controllers, services, models)
+- Use environment variables for configuration
+- Keep configuration files organized
+
+## Docker & Deployment
+- Use Docker for containerization
+- Use Docker Compose for local development
+- Optimize Docker images for production
+- Use multi-stage builds when appropriate
+
+## Code Quality
+- Write clean, readable, maintainable code
+- Add comments for complex logic
+- Use meaningful variable and function names
+- Follow SOLID principles
+- Keep functions small and focused
+
