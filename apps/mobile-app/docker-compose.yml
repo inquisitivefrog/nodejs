@@ -1,0 +1,75 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mobile-app-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: mobileapp
+    networks:
+      - mobile-app-network
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: mobile-app-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      MONGODB_URI: mongodb://mongodb:27017/mobileapp
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-key-in-production-use-openssl-rand-base64-32}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      NODE_ENV: ${NODE_ENV:-production}
+    env_file:
+      - .env
+    depends_on:
+      - mongodb
+    networks:
+      - mobile-app-network
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+
+  admin-dashboard:
+    build:
+      context: ./admin-dashboard
+      dockerfile: Dockerfile
+    container_name: mobile-app-admin
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      REACT_APP_API_URL: http://localhost:3000/api
+    depends_on:
+      - server
+    networks:
+      - mobile-app-network
+
+  debug:
+    image: mongo:7
+    container_name: mobile-app-debug
+    networks:
+      - mobile-app-network
+    volumes:
+      - ./debug:/debug
+    working_dir: /debug
+    command: sh -c "apt-get update && apt-get install -y curl && tail -f /dev/null"
+    depends_on:
+      - mongodb
+      - server
+    stdin_open: true
+    tty: true
+
+volumes:
+  mongodb_data:
+
+networks:
+  mobile-app-network:
+    driver: bridge
+
