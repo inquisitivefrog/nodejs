@@ -9,6 +9,8 @@
     "test": "jest",
     "test:watch": "jest --watchAll",
     "test:coverage": "jest --coverage",
+    "test:unit": "jest tests/unit",
+    "test:performance": "jest tests/performance",
     "create-admin": "node scripts/createAdmin.js"
   },
   "keywords": [

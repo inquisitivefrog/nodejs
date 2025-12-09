@@ -20,43 +20,56 @@ console.log(`[TEST SETUP] Using database: ${process.env.MONGODB_URI}`);
 // Close database connection after all tests
 afterAll(async () => {
   try {
-    // Close all mongoose connections
+    // Close all mongoose connections properly
+    // This is critical for Jest to exit cleanly without --forceExit
+    
+    // First, close all individual connections
+    if (mongoose.connections && mongoose.connections.length > 0) {
+      await Promise.all(
+        mongoose.connections.map(async (conn) => {
+          if (conn.readyState !== 0) {
+            try {
+              // Close the connection
+              await conn.close();
+            } catch (err) {
+              // Ignore individual connection close errors
+            }
+          }
+        })
+      );
+    }
+    
+    // Close the default connection
     if (mongoose.connection.readyState !== 0) {
       try {
-        // Drop test database
+        // Drop test database (optional cleanup)
         if (mongoose.connection.db) {
-          await mongoose.connection.db.dropDatabase();
-        }
-      } catch (err) {
-        // Ignore drop errors
-      }
-      
-      // Close the connection
-      await mongoose.connection.close();
-    }
-    
-    // Close any other connections
-    if (mongoose.connections && mongoose.connections.length > 0) {
-      for (const conn of mongoose.connections) {
-        if (conn.readyState !== 0) {
           try {
-            await conn.close();
+            await mongoose.connection.db.dropDatabase();
           } catch (err) {
-            // Ignore close errors
+            // Ignore drop errors - database might already be dropped
           }
         }
+        
+        // Close the connection
+        await mongoose.connection.close();
+      } catch (err) {
+        // Ignore close errors
       }
     }
     
-    // Force disconnect all connections
+    // Force disconnect all connections - this ensures all connections are closed
+    // This is the equivalent of knex.destroy() for Mongoose
     await mongoose.disconnect();
+    
+    // Give a small delay to ensure all cleanup is complete
+    await new Promise((resolve) => setTimeout(resolve, 100));
   } catch (error) {
-    // Ignore errors during cleanup
-    // Force disconnect as last resort
+    // Ignore errors during cleanup, but ensure we still disconnect
     try {
       await mongoose.disconnect();
     } catch (e) {
-      // Ignore
+      // Final fallback - ignore all errors
     }
   }
 }, 15000); // Increase timeout to 15 seconds
