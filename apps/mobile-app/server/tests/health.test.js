@@ -1,5 +1,13 @@
 const request = require('supertest');
+const { setupTestDB } = require('./helpers/testHelpers');
+
+// Import app AFTER setting up test environment
 const app = require('../src/app');
+
+// Setup database before tests
+beforeAll(async () => {
+  await setupTestDB();
+});
 
 describe('Health Check API', () => {
   it('should return health status', async () => {

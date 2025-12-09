@@ -5,15 +5,40 @@ const User = require('../../src/models/User');
 let connectionEstablished = false;
 
 const setupTestDB = async () => {
+  // ALWAYS ensure we're using test database - override any existing MONGODB_URI
+  const isDocker = process.env.HOSTNAME || process.env.DOCKER_ENV;
+  process.env.MONGODB_URI = isDocker 
+    ? 'mongodb://mongodb:27017/mobileapp-test'
+    : 'mongodb://localhost:27017/mobileapp-test';
+  
   if (!connectionEstablished) {
     await connectDB();
     connectionEstablished = true;
+  }
+  // Ensure connection is ready
+  if (mongoose.connection.readyState !== 1) {
+    await new Promise((resolve) => {
+      if (mongoose.connection.readyState === 1) {
+        resolve();
+      } else {
+        mongoose.connection.once('connected', resolve);
+      }
+    });
+  }
+  // Verify we're connected to the test database
+  const dbName = mongoose.connection.db?.databaseName;
+  if (dbName && dbName !== 'mobileapp-test') {
+    throw new Error(`Expected test database 'mobileapp-test' but connected to: ${dbName}. MONGODB_URI: ${process.env.MONGODB_URI}`);
   }
 };
 
 const clearDatabase = async () => {
   if (mongoose.connection.readyState !== 0) {
-    await User.deleteMany({});
+    try {
+      await User.deleteMany({});
+    } catch (error) {
+      // Ignore errors during cleanup
+    }
   }
 };
 

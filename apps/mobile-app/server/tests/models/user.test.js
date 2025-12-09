@@ -1,10 +1,16 @@
 const mongoose = require('mongoose');
-const User = require('../../../src/models/User');
 const { setupTestDB, clearDatabase } = require('../helpers/testHelpers');
+
+// Import User model AFTER setting up test environment
+const User = require('../../src/models/User');
 
 describe('User Model', () => {
   beforeAll(async () => {
     await setupTestDB();
+    // Ensure mongoose is connected
+    if (mongoose.connection.readyState === 0) {
+      await setupTestDB();
+    }
   });
 
   beforeEach(async () => {
@@ -74,19 +80,31 @@ describe('User Model', () => {
   });
 
   it('should require unique email', async () => {
-    await User.create({
-      email: 'test@example.com',
+    const firstUser = await User.create({
+      email: 'unique-test@example.com',
       password: 'password123',
       name: 'Test User',
     });
+    
+    expect(firstUser).toBeDefined();
+    expect(firstUser.email).toBe('unique-test@example.com');
 
-    await expect(
-      User.create({
-        email: 'test@example.com',
+    // Try to create another user with the same email - should fail
+    let duplicateError = null;
+    try {
+      await User.create({
+        email: 'unique-test@example.com',
         password: 'password123',
         name: 'Another User',
-      })
-    ).rejects.toThrow();
+      });
+    } catch (error) {
+      duplicateError = error;
+    }
+    
+    // Check if it's a duplicate key error
+    expect(duplicateError).not.toBeNull();
+    expect(duplicateError.code).toBe(11000); // MongoDB duplicate key error code
+    expect(duplicateError.message).toMatch(/duplicate key|E11000/);
   });
 
   it('should validate email format', async () => {

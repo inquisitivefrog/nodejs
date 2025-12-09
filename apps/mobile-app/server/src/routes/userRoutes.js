@@ -31,18 +31,26 @@ router.get('/:id', authenticate, isAdmin, async (req, res) => {
 // Update user (Admin only)
 router.put('/:id', authenticate, isAdmin, async (req, res) => {
   try {
-    const { name, role, isActive } = req.body;
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { name, role, isActive },
-      { new: true, runValidators: true }
-    ).select('-password');
+    const { name, email, role, isActive } = req.body;
+    const user = await User.findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json({ message: 'User updated successfully', user });
+    // Update fields if provided
+    if (name !== undefined) user.name = name;
+    if (email !== undefined) user.email = email;
+    if (role !== undefined) user.role = role;
+    if (isActive !== undefined) user.isActive = isActive;
+
+    await user.save();
+
+    // Return user without password
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.json({ user: userResponse });
   } catch (error) {
     console.error('Update user error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -52,10 +60,14 @@ router.put('/:id', authenticate, isAdmin, async (req, res) => {
 // Delete user (Admin only)
 router.delete('/:id', authenticate, isAdmin, async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const user = await User.findById(req.params.id);
+
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    await User.findByIdAndDelete(req.params.id);
+
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Delete user error:', error);

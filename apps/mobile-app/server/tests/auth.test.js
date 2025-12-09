@@ -1,11 +1,18 @@
 const request = require('supertest');
-const app = require('../src/app');
+const mongoose = require('mongoose');
 const { setupTestDB, clearDatabase, createTestUser } = require('./helpers/testHelpers');
 const User = require('../src/models/User');
+
+// Import app AFTER setting up test environment
+const app = require('../src/app');
 
 describe('Authentication API', () => {
   beforeAll(async () => {
     await setupTestDB();
+    // Ensure mongoose is connected
+    if (mongoose.connection.readyState === 0) {
+      await setupTestDB();
+    }
   });
 
   beforeEach(async () => {
@@ -86,8 +93,10 @@ describe('Authentication API', () => {
 
   describe('POST /api/auth/login', () => {
     beforeEach(async () => {
+      await clearDatabase();
+      // Use a unique email for this test suite
       await createTestUser({
-        email: 'test@example.com',
+        email: 'logintest@example.com',
         password: 'password123',
       });
     });
@@ -96,14 +105,14 @@ describe('Authentication API', () => {
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          email: 'test@example.com',
+          email: 'logintest@example.com',
           password: 'password123',
         })
         .expect(200);
 
       expect(response.body).toHaveProperty('token');
       expect(response.body).toHaveProperty('user');
-      expect(response.body.user.email).toBe('test@example.com');
+      expect(response.body.user.email).toBe('logintest@example.com');
       expect(response.body.user).not.toHaveProperty('password');
     });
 
@@ -123,7 +132,7 @@ describe('Authentication API', () => {
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          email: 'test@example.com',
+          email: 'logintest@example.com',
           password: 'wrongpassword',
         })
         .expect(401);
@@ -133,14 +142,14 @@ describe('Authentication API', () => {
 
     it('should not login with inactive account', async () => {
       await User.findOneAndUpdate(
-        { email: 'test@example.com' },
+        { email: 'logintest@example.com' },
         { isActive: false }
       );
 
       const response = await request(app)
         .post('/api/auth/login')
         .send({
-          email: 'test@example.com',
+          email: 'logintest@example.com',
           password: 'password123',
         })
         .expect(401);
@@ -163,15 +172,36 @@ describe('Authentication API', () => {
 
   describe('GET /api/auth/me', () => {
     it('should get current user with valid token', async () => {
-      const user = await createTestUser();
+      await clearDatabase();
+      const user = await createTestUser({
+        email: 'metest@example.com',
+        password: 'password123',
+      });
+      
+      // Verify user exists in database
+      const foundUser = await User.findOne({ email: user.email });
+      expect(foundUser).toBeDefined();
+      expect(foundUser._id.toString()).toBe(user._id.toString());
+      
       const loginResponse = await request(app)
         .post('/api/auth/login')
         .send({
           email: user.email,
           password: 'password123',
-        });
+        })
+        .expect(200);
 
+      expect(loginResponse.body.token).toBeDefined();
       const token = loginResponse.body.token;
+      
+      // Verify token is valid by checking it can be decoded
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      expect(decoded.id).toBe(user._id.toString());
+      
+      // Verify user still exists before making the request
+      const userBeforeRequest = await User.findById(user._id);
+      expect(userBeforeRequest).toBeDefined();
 
       const response = await request(app)
         .get('/api/auth/me')
