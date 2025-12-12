@@ -5,11 +5,13 @@ const router = express.Router();
 const authRoutes = require('./v1/authRoutes');
 const userRoutes = require('./v1/userRoutes');
 const adminRoutes = require('./v1/admin');
+const uploadRoutes = require('./v1/uploadRoutes');
 
 // Mount v1 routes
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/admin', adminRoutes);
+router.use('/upload', uploadRoutes);
 
 module.exports = router;
 

@@ -58,6 +58,10 @@ const userSchemaDefinition = {
     type: Date,
     select: false,
   },
+  profilePicture: {
+    type: String,
+    default: null,
+  },
 };
 
 const userSchemaOptions = {

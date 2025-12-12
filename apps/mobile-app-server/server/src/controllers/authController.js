@@ -199,6 +199,7 @@ exports.getMe = async (req, res) => {
         name: user.name,
         role: user.role,
         emailVerified: user.emailVerified,
+        profilePicture: user.profilePicture || null,
         createdAt: user.createdAt,
       },
     });

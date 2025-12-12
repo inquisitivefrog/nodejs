@@ -47,12 +47,19 @@ A full-stack mobile application server built with the MEN stack (MongoDB, Expres
 ### Backend
 - **Node.js**: JavaScript runtime
 - **Express.js**: Web application framework
-- **MongoDB**: NoSQL database
+- **MongoDB**: NoSQL database (3-node replica set)
 - **Mongoose**: MongoDB object modeling
 - **Passport.js**: Authentication middleware
 - **jsonwebtoken**: JWT token generation and verification
 - **bcrypt**: Password hashing
 - **dotenv**: Environment variable management
+- **Redis**: Caching and rate limiting
+- **BullMQ**: Job queue system
+- **Multer**: File upload handling
+- **Sharp**: Image processing
+- **Winston**: Structured logging
+- **Swagger/OpenAPI**: API documentation
+- **express-rate-limit**: Rate limiting middleware
 
 ### Frontend (Admin Dashboard)
 - **React**: UI library
@@ -97,14 +104,59 @@ mobile-app/
 
 ### Authentication
 - User registration and login
-- JWT token-based authentication
+- JWT token-based authentication (access tokens + refresh tokens)
 - Protected API routes
 - Admin role-based access control
 - Password hashing with bcrypt
 - Account activation/deactivation
+- Password reset functionality
+- Email verification
+- Refresh token rotation
+
+### Security Features (Priority 1)
+- Refresh token mechanism with rotation
+- Password reset with secure tokens
+- Email verification
+- Rate limiting (IP-based and user-based)
+- Input sanitization (XSS protection)
+- CORS configuration with environment-specific origins
+
+### API Improvements (Priority 2)
+- **Rate Limiting**: Redis-backed distributed rate limiting
+  - General API: 100 requests per 15 minutes
+  - Auth endpoints: 5 requests per 15 minutes
+  - Password reset: 3 requests per hour
+  - User operations: 200 requests per 15 minutes
+- **API Versioning**: `/api/v1/` prefix with backward compatibility
+- **Pagination & Filtering**: 
+  - Pagination with `?page=1&limit=10`
+  - Sorting with `?sort=createdAt&order=desc`
+  - Filtering by role, isActive, email, name
+  - Maximum 100 items per page
+- **Input Validation**: Enhanced validation with sanitization
+
+### Features & Functionality (Priority 3)
+- **File Upload Service**: 
+  - Profile picture upload (`POST /api/v1/upload/profile-picture`)
+  - Image processing and optimization (Sharp)
+  - File validation (image types, 5MB max)
+  - Local filesystem storage (S3-ready structure)
+- **API Documentation**: 
+  - Swagger/OpenAPI 3.0 documentation
+  - Interactive API testing interface at `/api/docs`
+  - Auto-generated from JSDoc annotations
+- **Logging System**: 
+  - Winston structured logging
+  - Request/response logging with request IDs
+  - Log rotation (daily, 14-30 day retention)
+  - Separate error and combined log files
+- **CORS Configuration**: 
+  - Environment-specific allowed origins
+  - Credentials support
+  - Configurable via environment variables
 
 ### Testing
-- Comprehensive test suite (102 tests)
+- Comprehensive test suite (290+ tests)
 - Unit tests for controllers and middleware
 - Integration tests for API endpoints
 - Performance and load testing
@@ -126,6 +178,10 @@ mobile-app/
 - `/api/v1/users/:id` - Update user (admin, PUT)
 - `/api/v1/users/:id` - Delete user (admin, DELETE)
 - `/api/v1/admin/pools` - Get connection pool statistics (admin)
+- `/api/v1/upload/profile-picture` - Upload profile picture (POST, multipart/form-data)
+- `/api/v1/upload/profile-picture` - Delete profile picture (DELETE)
+- `/api/docs` - Interactive API documentation (Swagger UI)
+- `/api/docs.json` - OpenAPI specification (JSON)
 
 #### Legacy Endpoints (Backward Compatible)
 - `/api/auth/*` - Same as `/api/v1/auth/*`
@@ -166,6 +222,7 @@ mobile-app/
    - Admin Dashboard: http://localhost
    - API Server: http://localhost:3000
    - API Health Check: http://localhost:3000/health
+   - API Documentation: http://localhost:3000/api/docs
    - MongoDB: localhost:27017
 
 5. **Login to Admin Dashboard:**
@@ -393,10 +450,31 @@ DELETE /api/users/:id
 Authorization: Bearer <admin-jwt-token>
 ```
 
+#### Upload Profile Picture
+```http
+POST /api/v1/upload/profile-picture
+Authorization: Bearer <jwt-token>
+Content-Type: multipart/form-data
+
+profilePicture: <image file>
+```
+
+#### Delete Profile Picture
+```http
+DELETE /api/v1/upload/profile-picture
+Authorization: Bearer <jwt-token>
+```
+
 ### Health Check
 ```http
 GET /health
 ```
+
+### API Documentation
+```http
+GET /api/docs
+```
+Interactive Swagger UI for testing all API endpoints.
 
 ## Testing
 

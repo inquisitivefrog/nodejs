@@ -103,11 +103,21 @@ async function checkMongoDB() {
  * Run tests
  */
 function runTests(testType, args = []) {
-  const jestArgs = [
-    '--max-old-space-size=4096',
-    'node_modules/.bin/jest',
-    ...args,
-  ];
+  const fs = require('fs');
+  const path = require('path');
+  
+  // Try to find jest in local node_modules
+  let jestCmd = 'npx --yes jest';
+  const jestBinPath = path.join(process.cwd(), 'node_modules', '.bin', 'jest');
+  const jestLibPath = path.join(process.cwd(), 'node_modules', 'jest', 'bin', 'jest.js');
+  
+  if (fs.existsSync(jestBinPath)) {
+    jestCmd = jestBinPath;
+  } else if (fs.existsSync(jestLibPath)) {
+    jestCmd = `node ${jestLibPath}`;
+  }
+
+  const jestArgs = [];
 
   if (testType === 'unit') {
     jestArgs.push('tests/unit');
@@ -118,7 +128,18 @@ function runTests(testType, args = []) {
     // Run all tests
   }
 
-  const command = `node ${jestArgs.join(' ')}`;
+  // Add any additional args
+  jestArgs.push(...args);
+
+  // Build command - use node for direct path, or npx for package name
+  let command;
+  if (jestCmd.includes('node_modules')) {
+    // Direct path - use node
+    command = `NODE_OPTIONS="--max-old-space-size=4096" node ${jestCmd} ${jestArgs.join(' ')}`;
+  } else {
+    // npx command - ensure local modules are in path
+    command = `NODE_OPTIONS="--max-old-space-size=4096" NODE_PATH="${process.cwd()}/node_modules:${process.cwd()}/node_modules/.bin" ${jestCmd} ${jestArgs.join(' ')}`;
+  }
   
   logSection(`🧪 Running ${testType.toUpperCase()} Tests`);
   log(`Command: ${command}`, 'blue');

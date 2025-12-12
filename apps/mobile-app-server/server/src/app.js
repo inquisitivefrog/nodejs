@@ -1,13 +1,16 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+const path = require('path');
+const corsMiddleware = require('./config/cors');
 const connectDB = require('./config/database');
 const { connectRedis } = require('./config/redis');
 const passport = require('./config/passport');
 const errorHandler = require('./middleware/errorHandler');
-const requestLogger = require('./middleware/requestLogger');
+const loggerMiddleware = require('./middleware/logger');
+const logger = require('./config/logger');
 const sanitizeInput = require('./middleware/sanitize');
 const { apiLimiter, authLimiter, passwordResetLimiter, userLimiter } = require('./middleware/rateLimiter');
+const swaggerSetup = require('./config/swagger');
 
 // Import routes
 const v1Routes = require('./routes/index');
@@ -36,16 +39,25 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Middleware
-app.use(cors());
+app.use(corsMiddleware); // CORS with environment-specific configuration
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Input sanitization (protect against XSS and injection)
 app.use(sanitizeInput);
 
-// Request logging (only in non-test environments to avoid test noise)
+// Request/Response logging (only in non-test environments to avoid test noise)
 if (process.env.NODE_ENV !== 'test') {
-  app.use(requestLogger);
+  app.use(loggerMiddleware);
+}
+
+// Serve static files (uploads)
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Swagger API Documentation
+if (process.env.NODE_ENV !== 'test') {
+  swaggerSetup(app);
+  logger.info('Swagger documentation available at /api/docs');
 }
 
 // Initialize Passport
@@ -84,9 +96,11 @@ if (process.env.NODE_ENV !== 'test') {
   const PORT = process.env.PORT || 3000;
   const serverInstance = process.env.SERVER_INSTANCE || 'unknown';
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Server Instance: ${serverInstance}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    logger.info(`Server running on port ${PORT}`, {
+      serverInstance,
+      environment: process.env.NODE_ENV || 'development',
+      port: PORT,
+    });
   });
 }
 

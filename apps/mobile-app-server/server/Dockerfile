@@ -12,12 +12,13 @@ COPY package.json ./
 
 # Install dependencies (including devDependencies for testing)
 # Unset NODE_ENV to ensure devDependencies are installed
-RUN unset NODE_ENV && npm install
+# Use npm ci for faster, reliable, reproducible builds, or npm install if no lock file
+RUN unset NODE_ENV && npm install && npm list jest supertest || npm install jest supertest --save-dev
 
 # Copy application files
 COPY src/ ./src/
 COPY scripts/ ./scripts/
-COPY package.json ./
+COPY tests/ ./tests/
 
 # Expose port
 EXPOSE 3000
