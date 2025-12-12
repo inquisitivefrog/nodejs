@@ -111,10 +111,26 @@ mobile-app/
 - 84.83% code coverage
 
 ### API Endpoints
-- `/api/auth/register` - User registration
-- `/api/auth/login` - User login
-- `/api/auth/me` - Get current user (protected)
-- Additional mobile app endpoints (to be defined)
+
+#### Versioned Endpoints (Recommended)
+- `/api/v1/auth/register` - User registration
+- `/api/v1/auth/login` - User login
+- `/api/v1/auth/refresh` - Refresh access token
+- `/api/v1/auth/me` - Get current user (protected)
+- `/api/v1/auth/forgot-password` - Request password reset
+- `/api/v1/auth/reset-password` - Reset password with token
+- `/api/v1/auth/verify-email` - Verify email address
+- `/api/v1/auth/resend-verification` - Resend verification email
+- `/api/v1/users` - Get all users (admin, paginated)
+- `/api/v1/users/:id` - Get user by ID (admin)
+- `/api/v1/users/:id` - Update user (admin, PUT)
+- `/api/v1/users/:id` - Delete user (admin, DELETE)
+- `/api/v1/admin/pools` - Get connection pool statistics (admin)
+
+#### Legacy Endpoints (Backward Compatible)
+- `/api/auth/*` - Same as `/api/v1/auth/*`
+- `/api/users/*` - Same as `/api/v1/users/*`
+- `/api/admin/*` - Same as `/api/v1/admin/*`
 
 ### Admin Dashboard
 - User management interface

@@ -3,7 +3,7 @@ const router = express.Router();
 const { body } = require('express-validator');
 const authController = require('../../controllers/authController');
 const { authenticate } = require('../../middleware/auth');
-const { cache, invalidateCache } = require('../../middleware/cache');
+const { cache } = require('../../middleware/cache');
 const { passwordResetLimiter } = require('../../middleware/rateLimiter');
 
 // Enhanced validation rules with better error messages

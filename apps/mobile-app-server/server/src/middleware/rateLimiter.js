@@ -2,9 +2,19 @@ const rateLimit = require('express-rate-limit');
 const { getRedisClient } = require('../config/redis');
 
 /**
+ * No-op middleware for test environment (rate limiting disabled in tests)
+ */
+const noOpRateLimiter = (req, res, next) => next();
+
+/**
  * Create a rate limiter with Redis store (if available) or memory store
  */
 function createRateLimiter(options = {}) {
+  // Disable rate limiting in test environment
+  if (process.env.NODE_ENV === 'test') {
+    return noOpRateLimiter;
+  }
+
   const {
     windowMs = 15 * 60 * 1000, // 15 minutes
     max = 100, // limit each IP to 100 requests per windowMs
@@ -19,9 +29,10 @@ function createRateLimiter(options = {}) {
   let store;
   try {
     const redisClient = getRedisClient();
-    if (redisClient && redisClient.status === 'ready') {
+    if (redisClient && (redisClient.status === 'ready' || redisClient.status === 'connect')) {
       // Use Redis store for distributed rate limiting across multiple server instances
-      const RedisStore = require('rate-limit-redis');
+      // rate-limit-redis v4 exports a RedisStore class
+      const { RedisStore } = require('rate-limit-redis');
       store = new RedisStore({
         client: redisClient,
         prefix: 'rl:', // Redis key prefix
@@ -30,6 +41,9 @@ function createRateLimiter(options = {}) {
   } catch (error) {
     // Redis not available, use memory store (default)
     // This is fine for single-instance deployments
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[RATE LIMITER] Using memory store (Redis not available):', error.message);
+    }
   }
 
   return rateLimit({

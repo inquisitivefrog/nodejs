@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate, isAdmin } = require('../middleware/auth');
-const { cache, invalidateCache } = require('../middleware/cache');
-const AnalyticsService = require('../services/analytics.service');
-const NotificationService = require('../services/notification.service');
-const { getReadUserModel, getWriteUserModel } = require('../utils/db-helper');
+const { authenticate, isAdmin } = require('../../middleware/auth');
+const { cache, invalidateCache } = require('../../middleware/cache');
+const AnalyticsService = require('../../services/analytics.service');
+const NotificationService = require('../../services/notification.service');
+const { getReadUserModel, getWriteUserModel } = require('../../utils/db-helper');
 
 /**
  * Parse pagination parameters from query string

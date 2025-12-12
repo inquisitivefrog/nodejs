@@ -7,11 +7,12 @@ RUN apk add --no-cache wget
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json* ./
+# Copy package files (don't use package-lock.json to ensure fresh install)
+COPY package.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies (including devDependencies for testing)
+# Unset NODE_ENV to ensure devDependencies are installed
+RUN unset NODE_ENV && npm install
 
 # Copy application files
 COPY src/ ./src/
