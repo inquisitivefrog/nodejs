@@ -1,0 +1,5 @@
+  console.log
+    [TEST SETUP] Using database: mongodb://mongodb1:27017/mobileapp-test
+
+      at Object.log (tests/setup.js:30:11)
+

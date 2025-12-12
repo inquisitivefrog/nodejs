@@ -1,0 +1,14 @@
+{
+  "name": "mongodb-replica-set-init",
+  "version": "1.0.0",
+  "description": "MongoDB replica set initialization script",
+  "main": "init-replica-set.js",
+  "scripts": {
+    "start": "node init-replica-set.js"
+  },
+  "dependencies": {
+    "mongodb": "^6.0.0"
+  }
+}
+
+
