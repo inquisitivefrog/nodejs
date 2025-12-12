@@ -1,40 +1,276 @@
 services:
-  mongodb:
+  mongodb1:
     image: mongo:7
-    container_name: mobile-app-mongodb
+    container_name: mobile-app-mongodb1
     restart: unless-stopped
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
+      - mongodb1_data:/data/db
+    command: mongod --replSet rs0 --bind_ip_all
     environment:
       MONGO_INITDB_DATABASE: mobileapp
     networks:
       - mobile-app-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
-  server:
+  mongodb2:
+    image: mongo:7
+    container_name: mobile-app-mongodb2
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb2_data:/data/db
+    command: mongod --replSet rs0 --bind_ip_all
+    environment:
+      MONGO_INITDB_DATABASE: mobileapp
+    networks:
+      - mobile-app-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  mongodb3:
+    image: mongo:7
+    container_name: mobile-app-mongodb3
+    restart: unless-stopped
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongodb3_data:/data/db
+    command: mongod --replSet rs0 --bind_ip_all
+    environment:
+      MONGO_INITDB_DATABASE: mobileapp
+    networks:
+      - mobile-app-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  mongodb-init:
+    image: mongo:7
+    container_name: mobile-app-mongodb-init
+    profiles: ["init"]
+    depends_on:
+      mongodb1:
+        condition: service_healthy
+      mongodb2:
+        condition: service_healthy
+      mongodb3:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts
+    working_dir: /scripts
+    networks:
+      - mobile-app-network
+    command: >
+      sh -c "
+        chmod +x /scripts/init-replica-set.sh &&
+        /scripts/init-replica-set.sh
+      "
+    restart: "no"
+
+  redis:
+    image: redis:7-alpine
+    container_name: mobile-app-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mobile-app-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Server instances for horizontal scaling
+  server1:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: mobile-app-server
+    container_name: mobile-app-server1
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       PORT: 3000
-      MONGODB_URI: mongodb://mongodb:27017/mobileapp
+      MONGODB_URI: mongodb://mongodb1:27017,mongodb2:27017,mongodb3:27017/mobileapp?replicaSet=rs0
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-key-in-production-use-openssl-rand-base64-32}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      NODE_ENV: ${NODE_ENV:-production}
+      SERVER_INSTANCE: server1
+    env_file:
+      - .env
+    depends_on:
+      mongodb1:
+        condition: service_healthy
+      mongodb2:
+        condition: service_healthy
+      mongodb3:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mobile-app-network
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  server2:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: mobile-app-server2
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      MONGODB_URI: mongodb://mongodb1:27017,mongodb2:27017,mongodb3:27017/mobileapp?replicaSet=rs0
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-key-in-production-use-openssl-rand-base64-32}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      NODE_ENV: ${NODE_ENV:-production}
+      SERVER_INSTANCE: server2
+    env_file:
+      - .env
+    depends_on:
+      mongodb1:
+        condition: service_healthy
+      mongodb2:
+        condition: service_healthy
+      mongodb3:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mobile-app-network
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  server3:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: mobile-app-server3
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      MONGODB_URI: mongodb://mongodb1:27017,mongodb2:27017,mongodb3:27017/mobileapp?replicaSet=rs0
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-key-in-production-use-openssl-rand-base64-32}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      NODE_ENV: ${NODE_ENV:-production}
+      SERVER_INSTANCE: server3
+    env_file:
+      - .env
+    depends_on:
+      mongodb1:
+        condition: service_healthy
+      mongodb2:
+        condition: service_healthy
+      mongodb3:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - mobile-app-network
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Job queue worker
+  worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: mobile-app-worker
+    restart: unless-stopped
+    environment:
+      MONGODB_URI: mongodb://mongodb1:27017,mongodb2:27017,mongodb3:27017/mobileapp?replicaSet=rs0
+      REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-change-this-secret-key-in-production-use-openssl-rand-base64-32}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
       NODE_ENV: ${NODE_ENV:-production}
     env_file:
       - .env
     depends_on:
-      - mongodb
+      mongodb1:
+        condition: service_healthy
+      mongodb2:
+        condition: service_healthy
+      mongodb3:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - mobile-app-network
     volumes:
       - ./server:/app
       - /app/node_modules
+    command: npm run worker
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep -q '[w]orker.js' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Load balancer (nginx)
+  loadbalancer:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: mobile-app-loadbalancer
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      server1:
+        condition: service_healthy
+      server2:
+        condition: service_healthy
+      server3:
+        condition: service_healthy
+    networks:
+      - mobile-app-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   admin-dashboard:
     build:
@@ -47,7 +283,8 @@ services:
     environment:
       REACT_APP_API_URL: http://localhost:3000/api
     depends_on:
-      - server
+      loadbalancer:
+        condition: service_healthy
     networks:
       - mobile-app-network
 
@@ -61,13 +298,22 @@ services:
     working_dir: /debug
     command: sh -c "apt-get update && apt-get install -y curl && tail -f /dev/null"
     depends_on:
-      - mongodb
-      - server
+      mongodb1:
+        condition: service_healthy
+      mongodb2:
+        condition: service_healthy
+      mongodb3:
+        condition: service_healthy
+      loadbalancer:
+        condition: service_healthy
     stdin_open: true
     tty: true
 
 volumes:
-  mongodb_data:
+  mongodb1_data:
+  mongodb2_data:
+  mongodb3_data:
+  redis_data:
 
 networks:
   mobile-app-network:

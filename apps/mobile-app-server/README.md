@@ -212,6 +212,40 @@ curl http://server:3000/health
 
 See [debug/README.md](./debug/README.md) for more examples.
 
+### MongoDB Sharding (Learning/Development)
+
+For learning MongoDB sharding, a complete sharded cluster setup is available:
+
+```bash
+# Start sharded cluster
+docker compose -f docker-compose.sharding.yml up -d
+
+# Initialize sharding (one-time setup)
+docker compose -f docker-compose.sharding.yml --profile sharding up mongodb-sharding-init
+```
+
+**Architecture:**
+- 3 Config Servers (metadata)
+- 2 Shards (each a 3-node replica set)
+- 2 mongos Routers (query routers)
+
+**Connection:** Applications connect to mongos routers, not shards directly.
+
+See [SHARDING_QUICKSTART.md](./SHARDING_QUICKSTART.md) for quick start guide and [docs/MONGODB_SHARDING.md](./docs/MONGODB_SHARDING.md) for detailed documentation.
+
+### AWS Deployment
+
+For AWS deployment with availability zones, see [docs/AWS_DEPLOYMENT.md](./docs/AWS_DEPLOYMENT.md).
+
+**Key Points:**
+- ✅ **Self-managed MongoDB works perfectly with AWS availability zones**
+- ✅ **No need to replace with 3rd party service** (unless you want managed service benefits)
+- ✅ **MongoDB Atlas** is an option if you want fully managed MongoDB (handles backups, monitoring, scaling automatically)
+
+**When to use Atlas vs Self-Managed:**
+- **Atlas**: Operational simplicity, automatic backups, compliance, global clusters
+- **Self-Managed**: Full control, cost optimization at large scale, learning
+
 ### Local Development
 
 #### Backend

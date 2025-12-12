@@ -25,7 +25,7 @@ describe('API Performance Tests', () => {
         password: 'admin123',
       });
 
-    adminToken = loginResponse.body.token;
+    adminToken = loginResponse.body.accessToken;
 
     // Create test users for performance testing
     for (let i = 0; i < 10; i++) {
@@ -119,6 +119,26 @@ describe('API Performance Tests', () => {
       expect(duration).toBeLessThan(1000);
     });
 
+    it('should handle 50 concurrent health check requests (load balancer scenario)', async () => {
+      const requests = Array(50).fill(null).map(() =>
+        request(app).get('/health')
+      );
+
+      const start = Date.now();
+      const responses = await Promise.all(requests);
+      const duration = Date.now() - start;
+
+      // All requests should succeed
+      const failures = responses.filter(r => r.status !== 200);
+      expect(failures.length).toBe(0);
+
+      // Should complete within reasonable time even with 50 concurrent requests
+      // Load balancer distributes load across multiple instances
+      expect(duration).toBeLessThan(3000);
+
+      console.log(`Load Balancer Test: 50 concurrent requests completed in ${duration}ms`);
+    });
+
     it('should handle 5 concurrent authenticated requests', async () => {
       const requests = Array(5).fill(null).map(() =>
         request(app)
@@ -158,6 +178,27 @@ describe('API Performance Tests', () => {
 
       // Should complete within reasonable time
       expect(duration).toBeLessThan(5000);
+    });
+
+    it('should handle 30 concurrent authenticated requests (load balancer scenario)', async () => {
+      const requests = Array(30).fill(null).map(() =>
+        request(app)
+          .get('/api/auth/me')
+          .set('Authorization', `Bearer ${adminToken}`)
+      );
+
+      const start = Date.now();
+      const responses = await Promise.all(requests);
+      const duration = Date.now() - start;
+
+      // All requests should succeed
+      const failures = responses.filter(r => r.status !== 200);
+      expect(failures.length).toBe(0);
+
+      // Should complete within reasonable time with load balancing
+      expect(duration).toBeLessThan(5000);
+
+      console.log(`Load Balancer Auth Test: 30 concurrent requests completed in ${duration}ms`);
     });
   });
 
@@ -219,7 +260,7 @@ describe('API Performance Tests', () => {
       // All logins should succeed
       responses.forEach(response => {
         expect(response.status).toBe(200);
-        expect(response.body.token).toBeDefined();
+        expect(response.body.accessToken).toBeDefined();
       });
 
       // Should complete within reasonable time

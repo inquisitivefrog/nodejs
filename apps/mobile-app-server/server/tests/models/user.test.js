@@ -136,5 +136,39 @@ describe('User Model', () => {
 
     expect(user.email).toBe('test@example.com');
   });
+
+  describe('getUserModel', () => {
+    it('should return User model for default connection when no connection provided', () => {
+      const { getUserModel } = require('../../src/models/User');
+      const model = getUserModel(null);
+      
+      expect(model).toBe(User);
+    });
+
+    it('should return User model for a specific connection', async () => {
+      const { getUserModel } = require('../../src/models/User');
+      const { getReadConnection } = require('../../src/config/database-pools');
+      
+      const readConn = await getReadConnection();
+      const model = getUserModel(readConn);
+      
+      expect(model).toBeDefined();
+      expect(typeof model.find).toBe('function');
+      expect(typeof model.create).toBe('function');
+      expect(typeof model.findById).toBe('function');
+    });
+
+    it('should reuse existing model if it exists on connection', async () => {
+      const { getUserModel } = require('../../src/models/User');
+      const { getReadConnection } = require('../../src/config/database-pools');
+      
+      const readConn = await getReadConnection();
+      const model1 = getUserModel(readConn);
+      const model2 = getUserModel(readConn);
+      
+      // Should return the same model instance
+      expect(model1).toBe(model2);
+    });
+  });
 });
 

@@ -1,7 +1,7 @@
 const passport = require('passport');
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
-const User = require('../models/User');
+const { getReadUserModel } = require('../utils/db-helper');
 
 const opts = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -19,7 +19,9 @@ passport.use(
         }
         return done(null, false);
       }
-      const user = await User.findById(jwt_payload.id);
+      // Use read pool for JWT authentication (read operation - can use secondary)
+      const ReadUser = await getReadUserModel();
+      const user = await ReadUser.findById(jwt_payload.id);
       if (user) {
         return done(null, user);
       }
@@ -45,7 +47,9 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await User.findById(id);
+    // Use read pool for deserialization (read operation - can use secondary)
+    const ReadUser = await getReadUserModel();
+    const user = await ReadUser.findById(id);
     done(null, user);
   } catch (error) {
     done(error, null);

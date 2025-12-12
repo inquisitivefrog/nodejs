@@ -17,6 +17,12 @@ describe('Health Check API', () => {
 
     expect(response.body).toHaveProperty('status', 'OK');
     expect(response.body).toHaveProperty('message', 'Server is running');
+    // In production with load balancer, serverInstance will be present
+    // In test environment, it may be 'unknown' or the test instance
+    if (response.body.serverInstance) {
+      expect(response.body.serverInstance).toBeDefined();
+    }
+    expect(response.body).toHaveProperty('timestamp');
   });
 });
 

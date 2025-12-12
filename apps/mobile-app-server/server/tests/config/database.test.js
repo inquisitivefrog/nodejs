@@ -19,8 +19,13 @@ describe('Database Connection', () => {
   describe('Connection Management', () => {
     it('should reuse existing connection if already connected', async () => {
       // Set up test environment
+      // Note: mongodb1 is reachable from all servers (server1, server2, server3) 
+      // because they're all on the same Docker network (mobile-app-network)
       process.env.NODE_ENV = 'test';
-      process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://mongodb:27017/mobileapp-test';
+      const isDocker = process.env.HOSTNAME || process.env.DOCKER_ENV;
+      process.env.MONGODB_URI = process.env.MONGODB_URI || (isDocker 
+        ? 'mongodb://mongodb1:27017/mobileapp-test'
+        : 'mongodb://localhost:27017/mobileapp-test');
 
       // First connection
       await connectDB();
@@ -38,7 +43,10 @@ describe('Database Connection', () => {
 
     it('should verify test database connection', async () => {
       process.env.NODE_ENV = 'test';
-      process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://mongodb:27017/mobileapp-test';
+      const isDocker = process.env.HOSTNAME || process.env.DOCKER_ENV;
+      process.env.MONGODB_URI = process.env.MONGODB_URI || (isDocker 
+        ? 'mongodb://mongodb1:27017/mobileapp-test'
+        : 'mongodb://localhost:27017/mobileapp-test');
 
       await connectDB();
       
@@ -56,10 +64,12 @@ describe('Database Connection', () => {
 
   describe('Connection Verification', () => {
     it('should verify test database in test environment', async () => {
+      // Note: This test works from any server (server1, server2, server3)
+      // because mongodb1 is reachable via Docker service name on the shared network
       process.env.NODE_ENV = 'test';
       const isDocker = process.env.HOSTNAME || process.env.DOCKER_ENV;
       process.env.MONGODB_URI = isDocker 
-        ? 'mongodb://mongodb:27017/mobileapp-test'
+        ? 'mongodb://mongodb1:27017/mobileapp-test'
         : 'mongodb://localhost:27017/mobileapp-test';
 
       // Close any existing connection

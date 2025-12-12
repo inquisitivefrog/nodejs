@@ -24,7 +24,7 @@ describe('Load Testing', () => {
         password: 'admin123',
       });
 
-    adminToken = loginResponse.body.token;
+    adminToken = loginResponse.body.accessToken;
   });
 
   afterAll(async () => {
@@ -91,6 +91,26 @@ describe('Load Testing', () => {
 
       console.log(`Burst Test: 20 concurrent requests completed in ${duration}ms`);
     });
+
+    it('should handle high concurrent load (100 requests)', async () => {
+      const requests = Array(100).fill(null).map(() =>
+        request(app)
+          .get('/health')
+      );
+
+      const start = Date.now();
+      const responses = await Promise.all(requests);
+      const duration = Date.now() - start;
+
+      // All requests should succeed
+      const failures = responses.filter(r => r.status !== 200);
+      expect(failures.length).toBe(0);
+
+      // Should complete within reasonable time even with high load
+      expect(duration).toBeLessThan(10000);
+
+      console.log(`High Load Test: 100 concurrent requests completed in ${duration}ms`);
+    });
   });
 
   describe('Mixed Workload', () => {
@@ -133,6 +153,52 @@ describe('Load Testing', () => {
       expect(duration).toBeLessThan(10000);
 
       console.log(`Mixed Workload: ${operations.length} operations completed in ${duration}ms (${successes.length} successful)`);
+    });
+
+    it('should handle sustained high load (200 requests over time)', async () => {
+      const batchSize = 20;
+      const totalRequests = 200;
+      const batches = Math.ceil(totalRequests / batchSize);
+      const responseTimes = [];
+      const errors = [];
+
+      for (let batch = 0; batch < batches; batch++) {
+        const requests = Array(batchSize).fill(null).map(() =>
+          request(app)
+            .get('/health')
+        );
+
+        const start = Date.now();
+        const responses = await Promise.all(requests);
+        const duration = Date.now() - start;
+        responseTimes.push(duration);
+
+        const failures = responses.filter(r => r.status !== 200);
+        if (failures.length > 0) {
+          errors.push(...failures);
+        }
+
+        // Small delay between batches to simulate real-world traffic
+        if (batch < batches - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      // Calculate statistics
+      const avgResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+      const maxResponseTime = Math.max(...responseTimes);
+      const minResponseTime = Math.min(...responseTimes);
+
+      // Very few errors should occur (less than 1%)
+      expect(errors.length).toBeLessThan(totalRequests * 0.01);
+
+      // Average response time should remain reasonable
+      expect(avgResponseTime).toBeLessThan(500);
+
+      // Max response time should not be excessive
+      expect(maxResponseTime).toBeLessThan(2000);
+
+      console.log(`Sustained High Load: ${totalRequests} requests, avg=${avgResponseTime.toFixed(2)}ms, min=${minResponseTime}ms, max=${maxResponseTime}ms, errors=${errors.length}`);
     });
   });
 });

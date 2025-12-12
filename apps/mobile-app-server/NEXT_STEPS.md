@@ -106,27 +106,105 @@
 - Search users by name/email
 - Search filters
 
-## Priority 5: DevOps & Monitoring
+## Priority 5: Scalability & Performance
 
-### 16. Health Check Enhancement ⭐
+### 16. Horizontal Scaling (Load Balancer) ⭐⭐⭐
+**Why**: Handle increased user load by distributing requests across multiple server instances
+- **Phase 1 (Completed)**: nginx load balancer + multiple server instances
+  - nginx reverse proxy with round-robin load balancing
+  - Multiple Express.js server instances
+  - Health checks for backend servers
+  - Session affinity (sticky sessions) if needed
+- **Phase 2 (Completed)**: Read optimization
+  - ✅ Configure Mongoose read preference for secondary reads (`secondaryPreferred`)
+  - ✅ Add Redis caching for frequently accessed data
+  - ✅ Connection pooling optimization (min: 2, max: 10 connections)
+  - ✅ Cache middleware with automatic invalidation
+  - ✅ Read queries use secondary nodes to distribute load
+- **Phase 3**: Async processing ✅ **COMPLETED**
+  - ✅ BullMQ job queue system implemented
+  - ✅ Email, push notifications, analytics moved to background jobs
+  - ✅ Job processors for email, notifications, analytics, image processing
+  - ✅ Worker service running as separate container
+  - ✅ API endpoints remain synchronous for fast responses
+  - ✅ Automatic retry with exponential backoff
+  - ✅ Priority support for critical jobs
+- **Phase 4**: Advanced scaling ⚠️ **PARTIALLY COMPLETE**
+  - ✅ Separate read/write connection pools (integrated)
+    - Read pool: 15 max connections, `secondaryPreferred` for read operations
+    - Write pool: 10 max connections, `primary` with journal writes for write operations
+    - All models and controllers now use appropriate pools
+    - Passport JWT strategy uses read pool
+    - Admin endpoint `/api/admin/pools` for monitoring pool statistics
+  - ✅ MongoDB sharding for write scaling (implemented for learning - see `docker-compose.sharding.yml`)
+    - 3 config servers (replica set)
+    - 2 shards (each a 3-node replica set)
+    - 2 mongos routers for high availability
+    - See `SHARDING_QUICKSTART.md` and `docs/MONGODB_SHARDING.md` for details
+  - ⚠️ **Auto scaling** - **MISSING**
+    - Current: Manual scaling with 3 fixed server instances
+    - Needed: Automatic scaling based on CPU/memory/request metrics
+    - Options: Kubernetes HPA, AWS ECS Auto Scaling, or Docker Swarm
+    - See `docs/AUTO_SCALING.md` for implementation guide
+  - Consider read replicas in different regions (infrastructure/deployment concern)
+
+**Architecture:**
+```
+Mobile Apps → Load Balancer (nginx) → [Server 1, Server 2, Server 3, ...] → MongoDB Replica Set
+```
+
+**Benefits:**
+- **High Availability**: If one server fails, others continue serving
+- **Load Distribution**: Requests spread across multiple instances
+- **Horizontal Scaling**: Easy to add/remove server instances
+- **Zero Downtime**: Can update servers one at a time
+
+### 17. Database Read Optimization ⭐⭐
+**Why**: Distribute read load across replica set secondaries
+- Configure Mongoose read preference (`readPreference: 'secondaryPreferred'`)
+- Monitor read/write distribution
+- Add database connection pooling
+- Consider read replicas in different regions for global apps
+
+### 18. Caching Layer (Redis) ⭐⭐
+**Why**: Reduce database load and improve response times
+- Add Redis for frequently accessed data
+- Cache user sessions, tokens, frequently queried data
+- Implement cache invalidation strategies
+- Use Redis for rate limiting counters
+
+### 19. Message Queue System ⭐⭐
+**Why**: Handle async operations without blocking API responses
+- Add Redis/BullMQ or RabbitMQ
+- Queue email sending, push notifications, image processing
+- Background job processing
+- Retry mechanisms for failed jobs
+
+## Priority 6: DevOps & Monitoring
+
+### 20. Health Check Enhancement ⭐
 **Why**: Better monitoring
 - Database connection status
 - Memory usage
 - Uptime information
 - Detailed health endpoint
+- Load balancer health checks
 
-### 17. Metrics & Monitoring ⭐
+### 21. Metrics & Monitoring ⭐
 **Why**: Production readiness
 - Add Prometheus metrics (optional)
-- Request metrics
+- Request metrics per server instance
 - Error tracking (Sentry integration)
+- Load balancer metrics
+- Database connection pool metrics
 
-### 18. CI/CD Pipeline ⭐
+### 22. CI/CD Pipeline ⭐
 **Why**: Automated testing and deployment
 - GitHub Actions workflow
 - Automated tests on PR
 - Docker image building
 - Deployment automation
+- Blue-green or rolling deployments
 
 ## Recommended Implementation Order
 

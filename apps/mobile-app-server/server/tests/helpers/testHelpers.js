@@ -7,8 +7,9 @@ let connectionEstablished = false;
 const setupTestDB = async () => {
   // ALWAYS ensure we're using test database - override any existing MONGODB_URI
   const isDocker = process.env.HOSTNAME || process.env.DOCKER_ENV;
+  // For tests, we can connect to a single node (mongodb1) - replica set not required for testing
   process.env.MONGODB_URI = isDocker 
-    ? 'mongodb://mongodb:27017/mobileapp-test'
+    ? 'mongodb://mongodb1:27017/mobileapp-test'
     : 'mongodb://localhost:27017/mobileapp-test';
   
   if (!connectionEstablished) {

@@ -98,8 +98,8 @@ describe('User Management API', () => {
     }
     
     expect(adminLogin.status).toBe(200);
-    expect(adminLogin.body.token).toBeDefined();
-    adminToken = adminLogin.body.token;
+    expect(adminLogin.body.accessToken).toBeDefined();
+    adminToken = adminLogin.body.accessToken;
     
     // Verify token contains correct user ID
     const decoded = jwt.verify(adminToken, process.env.JWT_SECRET);
@@ -156,8 +156,8 @@ describe('User Management API', () => {
     }
     
     expect(userLogin.status).toBe(200);
-    expect(userLogin.body.token).toBeDefined();
-    userToken = userLogin.body.token;
+    expect(userLogin.body.accessToken).toBeDefined();
+    userToken = userLogin.body.accessToken;
     
     // Verify token contains correct user ID
     const decodedUser = jwt.verify(userToken, process.env.JWT_SECRET);
