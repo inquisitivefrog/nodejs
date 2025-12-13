@@ -36,6 +36,9 @@ if (process.env.NODE_ENV !== 'test') {
   });
   // Connect to Redis (skip in test environment)
   connectRedis();
+  // Initialize Firebase Admin SDK for push notifications
+  const { initializeFirebase } = require('./config/firebase');
+  initializeFirebase();
 }
 
 // Middleware

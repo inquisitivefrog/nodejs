@@ -37,6 +37,9 @@ const clearDatabase = async () => {
   if (mongoose.connection.readyState !== 0) {
     try {
       await User.deleteMany({});
+      // Also clear DeviceToken if it exists
+      const DeviceToken = require('../../src/models/DeviceToken');
+      await DeviceToken.deleteMany({});
     } catch (error) {
       // Ignore errors during cleanup
     }

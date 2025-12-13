@@ -335,6 +335,11 @@ exports.resetPassword = async (req, res) => {
     // Invalidate cache
     await invalidateCache(`cache:/api/auth/me:${user._id}`);
 
+    // Send push notification (if user has device tokens)
+    NotificationService.sendPasswordResetNotification(user._id.toString()).catch((err) => {
+      console.error('Failed to enqueue password reset notification:', err.message);
+    });
+
     res.json({
       message: 'Password reset successfully',
     });
@@ -372,6 +377,11 @@ exports.verifyEmail = async (req, res) => {
 
     // Invalidate cache
     await invalidateCache(`cache:/api/auth/me:${user._id}`);
+
+    // Send push notification (if user has device tokens)
+    NotificationService.sendEmailVerificationNotification(user._id.toString()).catch((err) => {
+      console.error('Failed to enqueue email verification notification:', err.message);
+    });
 
     res.json({
       message: 'Email verified successfully',

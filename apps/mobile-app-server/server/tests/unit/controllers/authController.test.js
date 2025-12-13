@@ -36,6 +36,8 @@ jest.mock('../../../src/services/email.service', () => ({
 }));
 jest.mock('../../../src/services/notification.service', () => ({
   sendWelcomeNotification: jest.fn().mockResolvedValue(undefined),
+  sendPasswordResetNotification: jest.fn().mockResolvedValue(undefined),
+  sendEmailVerificationNotification: jest.fn().mockResolvedValue(undefined),
 }));
 jest.mock('../../../src/services/analytics.service', () => ({
   logUserRegistration: jest.fn().mockResolvedValue(undefined),

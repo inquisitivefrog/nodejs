@@ -62,6 +62,18 @@ const userSchemaDefinition = {
     type: String,
     default: null,
   },
+  // User preferences/settings
+  preferences: {
+    type: {
+      notifications: {
+        email: { type: Boolean, default: true },
+        push: { type: Boolean, default: true },
+      },
+      language: { type: String, default: 'en' },
+      theme: { type: String, enum: ['light', 'dark', 'auto'], default: 'auto' },
+    },
+    default: {},
+  },
 };
 
 const userSchemaOptions = {
@@ -70,6 +82,11 @@ const userSchemaOptions = {
 
 // Create schema
 const userSchema = new mongoose.Schema(userSchemaDefinition, userSchemaOptions);
+
+// Create text index for search functionality
+userSchema.index({ name: 'text', email: 'text' });
+// Compound index for common queries
+userSchema.index({ role: 1, isActive: 1 });
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {

@@ -508,7 +508,7 @@ npm run test:watch    # Run tests in watch mode
 
 ### Test Suites
 
-#### Integration Tests (58 tests)
+#### Integration Tests (200+ tests)
 - User Management API (12 tests)
 - Authentication API (13 tests)
 - User Model (9 tests)
@@ -516,8 +516,20 @@ npm run test:watch    # Run tests in watch mode
 - Error Handler Middleware (13 tests)
 - Passport JWT Strategy (7 tests)
 - Database Connection (4 tests)
+- Rate Limiting (4 tests)
+- API Versioning (6 tests)
+- Pagination & Filtering (15 tests)
+- Input Sanitization (8 tests)
+- Cache Integration (8 tests)
+- Database Pools (6 tests)
+- MongoDB Replica Set (5 tests)
+- MongoDB Schema & Identity (4 tests)
+- MongoDB Authentication (3 tests)
+- **Device Token Management (12 tests)** ⭐ NEW
+- **User Profile Management (19 tests)** ⭐ NEW
+- **Search Functionality (14 tests)** ⭐ NEW
 
-#### Performance Tests (15 tests)
+#### Performance Tests (19 tests)
 - API Performance Benchmarks (13 tests)
   - Response time benchmarks
   - Concurrent request handling
@@ -528,10 +540,19 @@ npm run test:watch    # Run tests in watch mode
   - Burst testing (20 concurrent requests)
   - Mixed read/write workloads
 
-#### Unit Tests (29 tests)
+#### Unit Tests (100+ tests)
 - Auth Controller (10 tests)
 - Auth Middleware (7 tests)
 - Error Handler Middleware (14 tests)
+- Cache Middleware (12 tests)
+- Redis Configuration (9 tests)
+- Queue Configuration (8+ tests)
+- Email Service (3 tests)
+- Analytics Service (4 tests)
+- **Notification Service (6 tests)** ⭐ NEW
+- **Firebase Configuration (6 tests)** ⭐ NEW
+- Input Sanitization Middleware (10 tests)
+- DB Helper Utilities (4 tests)
 
 ### Test Structure
 
