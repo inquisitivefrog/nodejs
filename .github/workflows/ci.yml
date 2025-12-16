@@ -201,6 +201,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Create minimal .env file for CI
+        working-directory: apps/mobile-app-server
+        run: |
+          # Create a minimal .env file for Docker Compose
+          touch .env
+          echo "# Minimal .env file for CI" >> .env
+          echo "JWT_SECRET=test-secret-key-for-ci" >> .env
+
       - name: Start services with Docker Compose
         working-directory: apps/mobile-app-server
         run: |
