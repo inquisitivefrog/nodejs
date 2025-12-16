@@ -15,7 +15,7 @@ describe('Error Handler Middleware', () => {
   describe('ValidationError', () => {
     it('should handle express-validator validation errors', async () => {
       const response = await request(app)
-        .post('/api/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           email: 'invalid-email', // Invalid email format
           password: '123', // Too short
@@ -78,7 +78,7 @@ describe('Error Handler Middleware', () => {
 
       // Try to create duplicate
       const response = await request(app)
-        .post('/api/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           email: 'duplicate@example.com',
           password: 'password123',
@@ -148,7 +148,7 @@ describe('Error Handler Middleware', () => {
       // This tests the actual flow - invalid tokens are caught by auth middleware
       // and return "Unauthorized", not "Invalid token"
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', 'Bearer invalid-token-here');
 
       expect(response.status).toBe(401);

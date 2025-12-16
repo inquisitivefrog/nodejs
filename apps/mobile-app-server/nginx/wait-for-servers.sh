@@ -31,3 +31,5 @@ echo "All backend servers are ready!"
 exec nginx -g "daemon off;"
 
 
+
+

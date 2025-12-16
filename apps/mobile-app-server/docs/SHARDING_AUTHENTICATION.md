@@ -204,3 +204,5 @@ If you have an existing cluster without authentication:
    docker compose -f docker-compose.sharding.yml restart server1 server2 server3 worker
    ```
 
+
+

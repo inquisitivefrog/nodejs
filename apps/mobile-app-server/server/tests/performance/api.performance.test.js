@@ -19,7 +19,7 @@ describe('API Performance Tests', () => {
     });
 
     const loginResponse = await request(app)
-      .post('/api/auth/login')
+      .post('/api/v1/auth/login')
       .send({
         email: adminUser.email,
         password: 'admin123',
@@ -51,10 +51,10 @@ describe('API Performance Tests', () => {
       expect(duration).toBeLessThan(50);
     });
 
-    it('GET /api/auth/me should respond within 200ms', async () => {
+    it('GET /api/v1/auth/me should respond within 200ms', async () => {
       const start = Date.now();
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${adminToken}`);
       const duration = Date.now() - start;
 
@@ -65,7 +65,7 @@ describe('API Performance Tests', () => {
     it('GET /api/users should respond within 500ms', async () => {
       const start = Date.now();
       const response = await request(app)
-        .get('/api/users')
+        .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`);
       const duration = Date.now() - start;
 
@@ -73,11 +73,11 @@ describe('API Performance Tests', () => {
       expect(duration).toBeLessThan(500);
     });
 
-    it('GET /api/users/:id should respond within 300ms', async () => {
+    it('GET /api/v1/users/:id should respond within 300ms', async () => {
       const userId = testUsers[0]._id;
       const start = Date.now();
       const response = await request(app)
-        .get(`/api/users/${userId}`)
+        .get(`/api/v1/users/${userId}`)
         .set('Authorization', `Bearer ${adminToken}`);
       const duration = Date.now() - start;
 
@@ -85,10 +85,10 @@ describe('API Performance Tests', () => {
       expect(duration).toBeLessThan(300);
     });
 
-    it('POST /api/auth/login should respond within 300ms', async () => {
+    it('POST /api/v1/auth/login should respond within 300ms', async () => {
       const start = Date.now();
       const response = await request(app)
-        .post('/api/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: adminUser.email,
           password: 'admin123',
@@ -142,7 +142,7 @@ describe('API Performance Tests', () => {
     it('should handle 5 concurrent authenticated requests', async () => {
       const requests = Array(5).fill(null).map(() =>
         request(app)
-          .get('/api/auth/me')
+          .get('/api/v1/auth/me')
           .set('Authorization', `Bearer ${adminToken}`)
       );
 
@@ -162,7 +162,7 @@ describe('API Performance Tests', () => {
     it('should handle 10 concurrent user list requests', async () => {
       const requests = Array(10).fill(null).map(() =>
         request(app)
-          .get('/api/users')
+          .get('/api/v1/users')
           .set('Authorization', `Bearer ${adminToken}`)
       );
 
@@ -183,7 +183,7 @@ describe('API Performance Tests', () => {
     it('should handle 30 concurrent authenticated requests (load balancer scenario)', async () => {
       const requests = Array(30).fill(null).map(() =>
         request(app)
-          .get('/api/auth/me')
+          .get('/api/v1/auth/me')
           .set('Authorization', `Bearer ${adminToken}`)
       );
 
@@ -246,7 +246,7 @@ describe('API Performance Tests', () => {
     it('should handle multiple login requests efficiently', async () => {
       const loginRequests = Array(5).fill(null).map(() =>
         request(app)
-          .post('/api/auth/login')
+          .post('/api/v1/auth/login')
           .send({
             email: adminUser.email,
             password: 'admin123',

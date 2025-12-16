@@ -64,7 +64,7 @@ describe('Connection Pool Integration Tests', () => {
   describe('Pool Statistics Endpoint', () => {
     it('should return pool statistics for admin users', async () => {
       const response = await request(app)
-        .get('/api/admin/pools')
+        .get('/api/v1/admin/pools')
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
@@ -78,7 +78,7 @@ describe('Connection Pool Integration Tests', () => {
 
     it('should deny access to non-admin users', async () => {
       const response = await request(app)
-        .get('/api/admin/pools')
+        .get('/api/v1/admin/pools')
         .set('Authorization', `Bearer ${regularToken}`)
         .expect(403);
 
@@ -87,14 +87,14 @@ describe('Connection Pool Integration Tests', () => {
   });
 
   describe('Read Operations Use Read Pool', () => {
-    it('should use read pool for GET /api/auth/me', async () => {
+    it('should use read pool for GET /api/v1/auth/me', async () => {
       // Get initial pool stats
       const statsBefore = getPoolStats();
       const readOpsBefore = statsBefore.read?.stats?.operations || 0;
 
       // Make read request
       await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${regularToken}`)
         .expect(200);
 
@@ -105,7 +105,7 @@ describe('Connection Pool Integration Tests', () => {
 
     it('should use read pool for GET /api/users (admin)', async () => {
       await request(app)
-        .get('/api/users')
+        .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
@@ -114,9 +114,9 @@ describe('Connection Pool Integration Tests', () => {
       expect(stats.read.readyState).toBe(1);
     });
 
-    it('should use read pool for GET /api/users/:id (admin)', async () => {
+    it('should use read pool for GET /api/v1/users/:id (admin)', async () => {
       await request(app)
-        .get(`/api/users/${regularUser._id}`)
+        .get(`/api/v1/users/${regularUser._id}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
@@ -127,7 +127,7 @@ describe('Connection Pool Integration Tests', () => {
   });
 
   describe('Write Operations Use Write Pool', () => {
-    it('should use write pool for POST /api/auth/register', async () => {
+    it('should use write pool for POST /api/v1/auth/register', async () => {
       const newUser = {
         email: `test-write-${Date.now()}@example.com`,
         password: 'test123',
@@ -135,7 +135,7 @@ describe('Connection Pool Integration Tests', () => {
       };
 
       await request(app)
-        .post('/api/auth/register')
+        .post('/api/v1/auth/register')
         .send(newUser)
         .expect(201);
 
@@ -147,11 +147,11 @@ describe('Connection Pool Integration Tests', () => {
       await User.deleteOne({ email: newUser.email });
     });
 
-    it('should use write pool for PUT /api/users/:id (admin)', async () => {
+    it('should use write pool for PUT /api/v1/users/:id (admin)', async () => {
       const updatedName = `Updated Name ${Date.now()}`;
 
       await request(app)
-        .put(`/api/users/${regularUser._id}`)
+        .put(`/api/v1/users/${regularUser._id}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ name: updatedName })
         .expect(200);
@@ -165,7 +165,7 @@ describe('Connection Pool Integration Tests', () => {
       expect(updatedUser.name).toBe(updatedName);
     });
 
-    it('should use write pool for DELETE /api/users/:id (admin)', async () => {
+    it('should use write pool for DELETE /api/v1/users/:id (admin)', async () => {
       // Create a user to delete
       const userToDelete = await User.create({
         email: `delete-test-${Date.now()}@example.com`,
@@ -174,7 +174,7 @@ describe('Connection Pool Integration Tests', () => {
       });
 
       await request(app)
-        .delete(`/api/users/${userToDelete._id}`)
+        .delete(`/api/v1/users/${userToDelete._id}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
@@ -229,7 +229,7 @@ describe('Connection Pool Integration Tests', () => {
       
       // Make a request that should work even if pools have issues
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${regularToken}`)
         .expect(200);
 

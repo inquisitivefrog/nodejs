@@ -130,3 +130,5 @@ router.delete('/:token', authenticate, deviceTokenController.unregisterDeviceTok
 
 module.exports = router;
 
+
+

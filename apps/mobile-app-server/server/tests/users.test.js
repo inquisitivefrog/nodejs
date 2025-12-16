@@ -73,7 +73,7 @@ describe('User Management API', () => {
     }
     
     const adminLogin = await request(app)
-      .post('/api/auth/login')
+      .post('/api/v1/auth/login')
       .send({
         email: adminUser.email,
         password: 'admin123',
@@ -139,7 +139,7 @@ describe('User Management API', () => {
     }
     
     const userLogin = await request(app)
-      .post('/api/auth/login')
+      .post('/api/v1/auth/login')
       .send({
         email: regularUser.email,
         password: 'password123',
@@ -171,7 +171,7 @@ describe('User Management API', () => {
     }
   });
 
-  describe('GET /api/users', () => {
+  describe('GET /api/v1/users', () => {
     it('should get all users as admin', async () => {
       // Verify admin token is valid first
       expect(adminToken).toBeDefined();
@@ -226,7 +226,7 @@ describe('User Management API', () => {
       expect(userCountAfterCreate).toBe(4); // admin + regular user + 2 test users
 
       const response = await request(app)
-        .get('/api/users')
+        .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`);
 
       if (response.status !== 200) {
@@ -251,7 +251,7 @@ describe('User Management API', () => {
       expect(regularUser).toBeDefined();
       
       const response = await request(app)
-        .get('/api/users')
+        .get('/api/v1/users')
         .set('Authorization', `Bearer ${userToken}`);
 
       if (response.status !== 403) {
@@ -269,14 +269,14 @@ describe('User Management API', () => {
 
     it('should require authentication', async () => {
       const response = await request(app)
-        .get('/api/users')
+        .get('/api/v1/users')
         .expect(401);
 
       expect(response.body.message).toBeDefined();
     });
   });
 
-  describe('GET /api/users/:id', () => {
+  describe('GET /api/v1/users/:id', () => {
     it('should get user by id as admin', async () => {
       // Verify admin token is still valid
       expect(adminToken).toBeDefined();
@@ -284,11 +284,11 @@ describe('User Management API', () => {
       const newUser = await createTestUser({ email: 'newuser@example.com' });
 
       const response = await request(app)
-        .get(`/api/users/${newUser._id}`)
+        .get(`/api/v1/users/${newUser._id}`)
         .set('Authorization', `Bearer ${adminToken}`);
 
       if (response.status !== 200) {
-        console.error('GET /api/users/:id failed:', {
+        console.error('GET /api/v1/users/:id failed:', {
           status: response.status,
           body: response.body,
           adminToken: adminToken ? 'exists' : 'missing'
@@ -303,7 +303,7 @@ describe('User Management API', () => {
     it('should return 404 for non-existent user', async () => {
       const fakeId = '507f1f77bcf86cd799439011';
       const response = await request(app)
-        .get(`/api/users/${fakeId}`)
+        .get(`/api/v1/users/${fakeId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(404);
 
@@ -312,7 +312,7 @@ describe('User Management API', () => {
 
     it('should not allow regular users to get user by id', async () => {
       const response = await request(app)
-        .get(`/api/users/${regularUser._id}`)
+        .get(`/api/v1/users/${regularUser._id}`)
         .set('Authorization', `Bearer ${userToken}`)
         .expect(403);
 
@@ -320,12 +320,12 @@ describe('User Management API', () => {
     });
   });
 
-  describe('PUT /api/users/:id', () => {
+  describe('PUT /api/v1/users/:id', () => {
     it('should update user as admin', async () => {
       const newUser = await createTestUser({ email: 'update@example.com' });
 
       const response = await request(app)
-        .put(`/api/users/${newUser._id}`)
+        .put(`/api/v1/users/${newUser._id}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           name: 'Updated Name',
@@ -342,7 +342,7 @@ describe('User Management API', () => {
     it('should return 404 for non-existent user', async () => {
       const fakeId = '507f1f77bcf86cd799439011';
       const response = await request(app)
-        .put(`/api/users/${fakeId}`)
+        .put(`/api/v1/users/${fakeId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           name: 'Updated Name',
@@ -354,7 +354,7 @@ describe('User Management API', () => {
 
     it('should not allow regular users to update users', async () => {
       const response = await request(app)
-        .put(`/api/users/${regularUser._id}`)
+        .put(`/api/v1/users/${regularUser._id}`)
         .set('Authorization', `Bearer ${userToken}`)
         .send({
           name: 'Updated Name',
@@ -365,12 +365,12 @@ describe('User Management API', () => {
     });
   });
 
-  describe('DELETE /api/users/:id', () => {
+  describe('DELETE /api/v1/users/:id', () => {
     it('should delete user as admin', async () => {
       const newUser = await createTestUser({ email: 'delete@example.com' });
 
       const response = await request(app)
-        .delete(`/api/users/${newUser._id}`)
+        .delete(`/api/v1/users/${newUser._id}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
@@ -378,7 +378,7 @@ describe('User Management API', () => {
 
       // Verify user is deleted
       const getResponse = await request(app)
-        .get(`/api/users/${newUser._id}`)
+        .get(`/api/v1/users/${newUser._id}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(404);
     });
@@ -386,7 +386,7 @@ describe('User Management API', () => {
     it('should return 404 for non-existent user', async () => {
       const fakeId = '507f1f77bcf86cd799439011';
       const response = await request(app)
-        .delete(`/api/users/${fakeId}`)
+        .delete(`/api/v1/users/${fakeId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(404);
 
@@ -395,7 +395,7 @@ describe('User Management API', () => {
 
     it('should not allow regular users to delete users', async () => {
       const response = await request(app)
-        .delete(`/api/users/${regularUser._id}`)
+        .delete(`/api/v1/users/${regularUser._id}`)
         .set('Authorization', `Bearer ${userToken}`)
         .expect(403);
 

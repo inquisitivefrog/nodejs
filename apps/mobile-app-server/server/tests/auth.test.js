@@ -19,10 +19,10 @@ describe('Authentication API', () => {
     await clearDatabase();
   });
 
-  describe('POST /api/auth/register', () => {
+  describe('POST /api/v1/auth/register', () => {
     it('should register a new user successfully', async () => {
       const response = await request(app)
-        .post('/api/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           name: 'John Doe',
           email: 'john@example.com',
@@ -42,7 +42,7 @@ describe('Authentication API', () => {
       await createTestUser({ email: 'existing@example.com' });
 
       const response = await request(app)
-        .post('/api/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           name: 'Another User',
           email: 'existing@example.com',
@@ -55,7 +55,7 @@ describe('Authentication API', () => {
 
     it('should validate email format', async () => {
       const response = await request(app)
-        .post('/api/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           name: 'John Doe',
           email: 'invalid-email',
@@ -68,7 +68,7 @@ describe('Authentication API', () => {
 
     it('should validate password length', async () => {
       const response = await request(app)
-        .post('/api/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           name: 'John Doe',
           email: 'john@example.com',
@@ -81,7 +81,7 @@ describe('Authentication API', () => {
 
     it('should require all fields', async () => {
       const response = await request(app)
-        .post('/api/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           email: 'john@example.com',
           // Missing name and password
@@ -92,7 +92,7 @@ describe('Authentication API', () => {
     });
   });
 
-  describe('POST /api/auth/login', () => {
+  describe('POST /api/v1/auth/login', () => {
     beforeEach(async () => {
       await clearDatabase();
       // Use a unique email for this test suite
@@ -104,7 +104,7 @@ describe('Authentication API', () => {
 
     it('should login with valid credentials', async () => {
       const response = await request(app)
-        .post('/api/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: 'logintest@example.com',
           password: 'password123',
@@ -120,7 +120,7 @@ describe('Authentication API', () => {
 
     it('should not login with invalid email', async () => {
       const response = await request(app)
-        .post('/api/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: 'wrong@example.com',
           password: 'password123',
@@ -132,7 +132,7 @@ describe('Authentication API', () => {
 
     it('should not login with invalid password', async () => {
       const response = await request(app)
-        .post('/api/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: 'logintest@example.com',
           password: 'wrongpassword',
@@ -149,7 +149,7 @@ describe('Authentication API', () => {
       );
 
       const response = await request(app)
-        .post('/api/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: 'logintest@example.com',
           password: 'password123',
@@ -161,7 +161,7 @@ describe('Authentication API', () => {
 
     it('should validate email format', async () => {
       const response = await request(app)
-        .post('/api/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: 'invalid-email',
           password: 'password123',
@@ -172,7 +172,7 @@ describe('Authentication API', () => {
     });
   });
 
-  describe('GET /api/auth/me', () => {
+  describe('GET /api/v1/auth/me', () => {
     it('should get current user with valid token', async () => {
       await clearDatabase();
       const user = await createTestUser({
@@ -186,7 +186,7 @@ describe('Authentication API', () => {
       expect(foundUser._id.toString()).toBe(user._id.toString());
       
       const loginResponse = await request(app)
-        .post('/api/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: user.email,
           password: 'password123',
@@ -206,7 +206,7 @@ describe('Authentication API', () => {
       expect(userBeforeRequest).toBeDefined();
 
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
@@ -216,7 +216,7 @@ describe('Authentication API', () => {
 
     it('should not get user without token', async () => {
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .expect(401);
 
       expect(response.body.message).toBeDefined();
@@ -224,7 +224,7 @@ describe('Authentication API', () => {
 
     it('should not get user with invalid token', async () => {
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', 'Bearer invalid-token')
         .expect(401);
 
@@ -232,7 +232,7 @@ describe('Authentication API', () => {
     });
   });
 
-  describe('POST /api/auth/refresh', () => {
+  describe('POST /api/v1/auth/refresh', () => {
     it('should refresh access token with valid refresh token', async () => {
       await clearDatabase();
       const user = await createTestUser({
@@ -241,7 +241,7 @@ describe('Authentication API', () => {
       });
 
       const loginResponse = await request(app)
-        .post('/api/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: 'refreshtest@example.com',
           password: 'password123',
@@ -252,7 +252,7 @@ describe('Authentication API', () => {
       expect(refreshToken).toBeDefined();
 
       const response = await request(app)
-        .post('/api/auth/refresh')
+        .post('/api/v1/auth/refresh')
         .send({ refreshToken })
         .expect(200);
 
@@ -269,7 +269,7 @@ describe('Authentication API', () => {
 
     it('should return error for invalid refresh token', async () => {
       const response = await request(app)
-        .post('/api/auth/refresh')
+        .post('/api/v1/auth/refresh')
         .send({ refreshToken: 'invalid-token' })
         .expect(401);
 
@@ -277,7 +277,7 @@ describe('Authentication API', () => {
     });
   });
 
-  describe('POST /api/auth/forgot-password', () => {
+  describe('POST /api/v1/auth/forgot-password', () => {
     it('should send password reset email for existing user', async () => {
       await clearDatabase();
       await createTestUser({
@@ -286,7 +286,7 @@ describe('Authentication API', () => {
       });
 
       const response = await request(app)
-        .post('/api/auth/forgot-password')
+        .post('/api/v1/auth/forgot-password')
         .send({ email: 'forgotpass@example.com' })
         .expect(200);
 
@@ -295,7 +295,7 @@ describe('Authentication API', () => {
 
     it('should return same message for non-existent user (security)', async () => {
       const response = await request(app)
-        .post('/api/auth/forgot-password')
+        .post('/api/v1/auth/forgot-password')
         .send({ email: 'nonexistent@example.com' })
         .expect(200);
 
@@ -303,7 +303,7 @@ describe('Authentication API', () => {
     });
   });
 
-  describe('POST /api/auth/reset-password', () => {
+  describe('POST /api/v1/auth/reset-password', () => {
     it('should reset password with valid token', async () => {
       await clearDatabase();
       const user = await createTestUser({
@@ -320,7 +320,7 @@ describe('Authentication API', () => {
       });
 
       const response = await request(app)
-        .post('/api/auth/reset-password')
+        .post('/api/v1/auth/reset-password')
         .send({
           token: resetToken,
           password: 'newpassword123',
@@ -331,7 +331,7 @@ describe('Authentication API', () => {
 
       // Verify new password works
       const loginResponse = await request(app)
-        .post('/api/auth/login')
+        .post('/api/v1/auth/login')
         .send({
           email: 'resetpass@example.com',
           password: 'newpassword123',
@@ -343,7 +343,7 @@ describe('Authentication API', () => {
 
     it('should return error for invalid token', async () => {
       const response = await request(app)
-        .post('/api/auth/reset-password')
+        .post('/api/v1/auth/reset-password')
         .send({
           token: 'invalid-token',
           password: 'newpassword123',
@@ -354,7 +354,7 @@ describe('Authentication API', () => {
     });
   });
 
-  describe('POST /api/auth/verify-email', () => {
+  describe('POST /api/v1/auth/verify-email', () => {
     it('should verify email with valid token', async () => {
       await clearDatabase();
       const user = await createTestUser({
@@ -372,7 +372,7 @@ describe('Authentication API', () => {
       });
 
       const response = await request(app)
-        .post('/api/auth/verify-email')
+        .post('/api/v1/auth/verify-email')
         .send({ token: verificationToken })
         .expect(200);
 
@@ -385,7 +385,7 @@ describe('Authentication API', () => {
 
     it('should return error for invalid token', async () => {
       const response = await request(app)
-        .post('/api/auth/verify-email')
+        .post('/api/v1/auth/verify-email')
         .send({ token: 'invalid-token' })
         .expect(400);
 
@@ -393,7 +393,7 @@ describe('Authentication API', () => {
     });
   });
 
-  describe('POST /api/auth/resend-verification', () => {
+  describe('POST /api/v1/auth/resend-verification', () => {
     it('should resend verification email for unverified user', async () => {
       await clearDatabase();
       await createTestUser({
@@ -403,7 +403,7 @@ describe('Authentication API', () => {
       });
 
       const response = await request(app)
-        .post('/api/auth/resend-verification')
+        .post('/api/v1/auth/resend-verification')
         .send({ email: 'resendverify@example.com' })
         .expect(200);
 
@@ -419,7 +419,7 @@ describe('Authentication API', () => {
       });
 
       const response = await request(app)
-        .post('/api/auth/resend-verification')
+        .post('/api/v1/auth/resend-verification')
         .send({ email: 'alreadyverified@example.com' })
         .expect(200);
 

@@ -7,7 +7,7 @@ RUN apk add --no-cache wget
 # Set working directory
 WORKDIR /app
 
-# Copy package files (don't use package-lock.json to ensure fresh install)
+# Copy package files
 COPY package.json ./
 
 # Install dependencies (including devDependencies for testing)

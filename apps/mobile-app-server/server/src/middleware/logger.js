@@ -38,6 +38,19 @@ const requestLogger = (req, res, next) => {
     const duration = Date.now() - startTime;
     const { statusCode } = res;
 
+    // Record metrics (only in non-test environments)
+    if (process.env.NODE_ENV !== 'test') {
+      try {
+        const { recordHttpRequest } = require('../config/metrics');
+        // Normalize route (remove IDs, query params)
+        const route = normalizeRoute(path);
+        recordHttpRequest(method, route, statusCode, duration);
+      } catch (error) {
+        // Silently fail metrics recording to not break request flow
+        logger.warn('Failed to record metrics:', error.message);
+      }
+    }
+
     // Log response
     logger.info('Outgoing response', {
       requestId,
@@ -55,6 +68,24 @@ const requestLogger = (req, res, next) => {
 
   next();
 };
+
+/**
+ * Normalize route path for metrics (remove IDs, query params)
+ */
+function normalizeRoute(path) {
+  if (!path) return 'unknown';
+  
+  // Remove query parameters
+  const route = path.split('?')[0];
+  
+  // Replace MongoDB ObjectIds and UUIDs with :id
+  const normalized = route
+    .replace(/\/[0-9a-f]{24}/gi, '/:id') // MongoDB ObjectId
+    .replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '/:id') // UUID
+    .replace(/\/\d+/g, '/:id'); // Numeric IDs
+  
+  return normalized || 'unknown';
+}
 
 /**
  * Sanitize request body to remove sensitive information

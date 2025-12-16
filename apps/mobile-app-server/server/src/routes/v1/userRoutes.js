@@ -64,9 +64,9 @@ const userListCacheKey = (req) => {
     ...(req.query.email && { email: req.query.email }),
     ...(req.query.name && { name: req.query.name }),
   });
-  return `cache:/api/users?${params.toString()}`;
+  return `cache:/api/v1/users?${params.toString()}`;
 };
-const userByIdCacheKey = (req) => `cache:/api/users/${req.params.id}`;
+const userByIdCacheKey = (req) => `cache:/api/v1/users/${req.params.id}`;
 
 // Get all users (Admin only) - with pagination, filtering, and sorting
 router.get('/', authenticate, isAdmin, cache(300, userListCacheKey), async (req, res) => {
@@ -151,8 +151,8 @@ router.put('/:id', authenticate, isAdmin, async (req, res) => {
     await user.save();
 
     // Invalidate cache for this user and user list (all pagination variations)
-    await invalidateCache(`cache:/api/users/${req.params.id}`);
-    await invalidateCache('cache:/api/users*'); // Invalidate all paginated user lists
+    await invalidateCache(`cache:/api/v1/users/${req.params.id}`);
+    await invalidateCache('cache:/api/v1/users*'); // Invalidate all paginated user lists
 
     // Log admin action asynchronously
     AnalyticsService.logUserAction(req.user.id, 'user.updated', {
@@ -197,8 +197,8 @@ router.delete('/:id', authenticate, isAdmin, async (req, res) => {
     await WriteUser.findByIdAndDelete(req.params.id);
 
     // Invalidate cache for this user and user list (all pagination variations)
-    await invalidateCache(`cache:/api/users/${req.params.id}`);
-    await invalidateCache('cache:/api/users*'); // Invalidate all paginated user lists
+    await invalidateCache(`cache:/api/v1/users/${req.params.id}`);
+    await invalidateCache('cache:/api/v1/users*'); // Invalidate all paginated user lists
 
     // Log admin action asynchronously
     AnalyticsService.logUserAction(req.user.id, 'user.deleted', {

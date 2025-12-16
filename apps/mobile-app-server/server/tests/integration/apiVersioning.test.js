@@ -80,33 +80,5 @@ describe('API Versioning', () => {
     });
   });
 
-  describe('Legacy API Routes (Backward Compatibility)', () => {
-    it('should still support /api/auth routes', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({ email: 'admin@test.com', password: 'password123' });
-      
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('accessToken');
-    });
-
-    it('should still support /api/users routes', async () => {
-      const response = await request(app)
-        .get('/api/users')
-        .set('Authorization', `Bearer ${adminToken}`);
-      
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('users');
-    });
-
-    it('should still support /api/admin routes', async () => {
-      const response = await request(app)
-        .get('/api/admin/pools')
-        .set('Authorization', `Bearer ${adminToken}`);
-      
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('success', true);
-    });
-  });
 });
 

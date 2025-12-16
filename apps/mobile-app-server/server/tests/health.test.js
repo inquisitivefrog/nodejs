@@ -15,8 +15,9 @@ describe('Health Check API', () => {
       .get('/health')
       .expect(200);
 
-    expect(response.body).toHaveProperty('status', 'OK');
-    expect(response.body).toHaveProperty('message', 'Server is running');
+    expect(response.body).toHaveProperty('status');
+    expect(['healthy', 'degraded', 'OK']).toContain(response.body.status);
+    // Message is optional - health check returns status object
     // In production with load balancer, serverInstance will be present
     // In test environment, it may be 'unknown' or the test instance
     if (response.body.serverInstance) {

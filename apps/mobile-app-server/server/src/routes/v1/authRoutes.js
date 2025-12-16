@@ -16,20 +16,22 @@ const registerValidation = [
     .notEmpty()
     .withMessage('Email is required'),
   body('password')
+    .notEmpty()
+    .withMessage('Password is required')
     .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number')
-    .optional(), // Make password strength check optional for now (can be enforced later)
+    .withMessage('Password must be at least 6 characters long'),
+    // Password strength check is optional - uncomment to enforce
+    // .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    // .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number')
   body('name')
     .trim()
     .notEmpty()
     .withMessage('Name is required')
     .isLength({ min: 2, max: 100 })
-    .withMessage('Name must be between 2 and 100 characters')
-    .matches(/^[a-zA-Z\s'-]+$/)
-    .withMessage('Name can only contain letters, spaces, hyphens, and apostrophes')
-    .optional(), // Make name format check optional for now
+    .withMessage('Name must be between 2 and 100 characters'),
+    // Name format check is optional - uncomment to enforce
+    // .matches(/^[a-zA-Z\s'-]+$/)
+    // .withMessage('Name can only contain letters, spaces, hyphens, and apostrophes')
 ];
 
 const loginValidation = [
@@ -74,9 +76,10 @@ const resetPasswordValidation = [
   body('password')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number')
-    .optional(), // Make password strength check optional for now
+    // Password strength check is optional - uncomment to enforce
+    // .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    // .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number')
+    .optional({ checkFalsy: true }), // Make password strength check optional for now
 ];
 
 const verifyEmailValidation = [

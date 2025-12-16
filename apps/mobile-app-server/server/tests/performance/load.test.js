@@ -18,7 +18,7 @@ describe('Load Testing', () => {
     });
 
     const loginResponse = await request(app)
-      .post('/api/auth/login')
+      .post('/api/v1/auth/login')
       .send({
         email: adminUser.email,
         password: 'admin123',
@@ -40,7 +40,7 @@ describe('Load Testing', () => {
         const start = Date.now();
         try {
           const response = await request(app)
-            .get('/api/auth/me')
+            .get('/api/v1/auth/me')
             .set('Authorization', `Bearer ${adminToken}`);
           
           const duration = Date.now() - start;
@@ -74,7 +74,7 @@ describe('Load Testing', () => {
     it('should handle burst of 20 concurrent requests', async () => {
       const requests = Array(20).fill(null).map(() =>
         request(app)
-          .get('/api/auth/me')
+          .get('/api/v1/auth/me')
           .set('Authorization', `Bearer ${adminToken}`)
       );
 
@@ -123,7 +123,7 @@ describe('Load Testing', () => {
         // Read operation
         operations.push(
           request(app)
-            .get('/api/users')
+            .get('/api/v1/users')
             .set('Authorization', `Bearer ${adminToken}`)
         );
 
@@ -131,7 +131,7 @@ describe('Load Testing', () => {
         if (i % 2 === 0) {
           operations.push(
             request(app)
-              .post('/api/auth/register')
+              .post('/api/v1/auth/register')
               .send({
                 email: `load-user-${i}-${Date.now()}@test.com`,
                 password: 'password123',

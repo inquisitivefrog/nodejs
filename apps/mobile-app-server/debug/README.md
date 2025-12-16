@@ -11,31 +11,14 @@ docker compose exec debug sh
 
 ### MongoDB CLI (mongosh)
 
-Connect to MongoDB Replica Set:
+Connect to MongoDB:
 ```bash
-# Connect to replica set (recommended - connects to primary automatically)
-mongosh "mongodb://mongodb1:27017,mongodb2:27017,mongodb3:27017/mobileapp?replicaSet=rs0"
+mongosh mongodb://mongodb:27017/mobileapp
 ```
 
-Or connect to a specific node:
+Or use the short form:
 ```bash
-# Connect to primary node (mongodb1)
-mongosh mongodb://mongodb1:27017/mobileapp
-
-# Connect to secondary node (mongodb2)
-mongosh mongodb://mongodb2:27017/mobileapp
-
-# Connect to secondary node (mongodb3)
-mongosh mongodb://mongodb3:27017/mobileapp
-```
-
-Check replica set status:
-```javascript
-// After connecting, check replica set status
-rs.status()
-
-// Check current member
-rs.isMaster()
+mongosh "mongodb://mongodb/mobileapp"
 ```
 
 **Example commands:**

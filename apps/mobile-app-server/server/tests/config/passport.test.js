@@ -22,7 +22,7 @@ describe('Passport JWT Strategy', () => {
       const emptyToken = jwt.sign({}, process.env.JWT_SECRET);
 
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${emptyToken}`);
 
       expect(response.status).toBe(401);
@@ -39,7 +39,7 @@ describe('Passport JWT Strategy', () => {
       const app = require('../../src/app');
 
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${tokenWithoutId}`);
 
       expect(response.status).toBe(401);
@@ -57,7 +57,7 @@ describe('Passport JWT Strategy', () => {
       const app = require('../../src/app');
 
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(401);
@@ -80,7 +80,7 @@ describe('Passport JWT Strategy', () => {
       );
 
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${invalidIdToken}`);
 
       // Invalid ObjectId causes CastError which results in 500
@@ -117,7 +117,7 @@ describe('Passport JWT Strategy', () => {
       );
 
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${token}`);
 
       expect(response.status).toBe(401);
@@ -136,7 +136,7 @@ describe('Passport JWT Strategy', () => {
       );
 
       const response = await request(app)
-        .get('/api/auth/me')
+        .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${invalidToken}`);
 
       // Invalid ObjectId causes CastError which results in 500

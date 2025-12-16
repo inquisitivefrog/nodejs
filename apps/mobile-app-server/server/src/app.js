@@ -14,13 +14,15 @@ const swaggerSetup = require('./config/swagger');
 
 // Import routes
 const v1Routes = require('./routes/index');
-// Legacy routes (for backward compatibility - can be removed in future versions)
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
-const adminRoutes = require('./routes/admin');
 
 // Initialize Express app
 const app = express();
+
+// Initialize Sentry error tracking (must be before other imports in production)
+if (process.env.NODE_ENV !== 'test') {
+  const { initializeSentry } = require('./config/sentry');
+  initializeSentry();
+}
 
 // Connect to MongoDB (skip in test environment)
 if (process.env.NODE_ENV !== 'test') {
@@ -39,6 +41,20 @@ if (process.env.NODE_ENV !== 'test') {
   // Initialize Firebase Admin SDK for push notifications
   const { initializeFirebase } = require('./config/firebase');
   initializeFirebase();
+}
+
+// Sentry request handler (must be before other middleware)
+if (process.env.NODE_ENV !== 'test' && process.env.SENTRY_DSN) {
+  try {
+    const { Sentry } = require('./config/sentry');
+    if (Sentry) {
+      app.use(Sentry.Handlers.requestHandler());
+      app.use(Sentry.Handlers.tracingHandler());
+    }
+  } catch (error) {
+    // Sentry not available, continue without it
+    logger.warn('Sentry handlers not available, continuing without error tracking');
+  }
 }
 
 // Middleware
@@ -67,29 +83,47 @@ if (process.env.NODE_ENV !== 'test') {
 app.use(passport.initialize());
 
 // Routes
-app.get('/health', (req, res) => {
-  const serverInstance = process.env.SERVER_INSTANCE || 'unknown';
-  res.json({ 
-    status: 'OK', 
-    message: 'Server is running',
-    serverInstance: serverInstance,
-    timestamp: new Date().toISOString()
+const healthController = require('./controllers/healthController');
+app.get('/health', healthController.getHealth);
+app.get('/health/live', healthController.getLiveness);
+app.get('/health/ready', healthController.getReadiness);
+
+// Prometheus metrics endpoint (only in non-test environments)
+if (process.env.NODE_ENV !== 'test') {
+  const { getMetrics } = require('./config/metrics');
+  app.get('/metrics', async (req, res) => {
+    try {
+      const metrics = await getMetrics();
+      res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+      res.send(metrics);
+    } catch (error) {
+      logger.error('Error getting metrics:', error);
+      res.status(500).send('Error generating metrics');
+    }
   });
-});
+  logger.info('Prometheus metrics available at /metrics');
+}
 
 // Versioned API routes (v1) with rate limiting
 app.use('/api/v1', apiLimiter, v1Routes);
-
-// Legacy routes (for backward compatibility) - with rate limiting
-// These will be deprecated in future versions
-app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/users', userLimiter, userRoutes);
-app.use('/api/admin', userLimiter, adminRoutes);
 
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
+
+// Sentry error handler (must be before custom error handler)
+if (process.env.NODE_ENV !== 'test' && process.env.SENTRY_DSN) {
+  try {
+    const { Sentry } = require('./config/sentry');
+    if (Sentry) {
+      app.use(Sentry.Handlers.errorHandler());
+    }
+  } catch (error) {
+    // Sentry not available, continue without it
+    logger.warn('Sentry error handler not available, continuing without error tracking');
+  }
+}
 
 // Error handler (must be last)
 app.use(errorHandler);

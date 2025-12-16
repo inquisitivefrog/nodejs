@@ -41,6 +41,18 @@ exports.register = async (req, res) => {
 
     const { email, password, name } = req.body;
 
+    // Validate required fields are present (additional check in case validation middleware didn't catch it)
+    if (!email || !password || !name) {
+      return res.status(400).json({ 
+        message: 'Missing required fields',
+        errors: [
+          ...(!email ? [{ msg: 'Email is required', param: 'email' }] : []),
+          ...(!password ? [{ msg: 'Password is required', param: 'password' }] : []),
+          ...(!name ? [{ msg: 'Name is required', param: 'name' }] : []),
+        ]
+      });
+    }
+
     // Use read pool to check if user exists (read operation)
     const ReadUser = await getReadUserModel();
     const existingUser = await ReadUser.findOne({ email });
@@ -57,7 +69,7 @@ exports.register = async (req, res) => {
     });
 
     // Invalidate user list cache since a new user was added
-    await invalidateCache('cache:/api/users');
+    await invalidateCache('cache:/api/v1/users*');
 
     // Generate tokens
     const accessToken = generateAccessToken(user._id);
@@ -333,7 +345,7 @@ exports.resetPassword = async (req, res) => {
     await user.save();
 
     // Invalidate cache
-    await invalidateCache(`cache:/api/auth/me:${user._id}`);
+    await invalidateCache(`cache:/api/v1/auth/me:${user._id}`);
 
     // Send push notification (if user has device tokens)
     NotificationService.sendPasswordResetNotification(user._id.toString()).catch((err) => {
@@ -376,7 +388,7 @@ exports.verifyEmail = async (req, res) => {
     await user.save();
 
     // Invalidate cache
-    await invalidateCache(`cache:/api/auth/me:${user._id}`);
+    await invalidateCache(`cache:/api/v1/auth/me:${user._id}`);
 
     // Send push notification (if user has device tokens)
     NotificationService.sendEmailVerificationNotification(user._id.toString()).catch((err) => {

@@ -22,7 +22,7 @@ describe('Cache Integration Tests', () => {
     });
 
     const loginResponse = await request(app)
-      .post('/api/auth/login')
+      .post('/api/v1/auth/login')
       .send({
         email: adminUser.email,
         password: 'admin123',
@@ -42,7 +42,7 @@ describe('Cache Integration Tests', () => {
 
     // Get fresh admin token
     const loginResponse = await request(app)
-      .post('/api/auth/login')
+      .post('/api/v1/auth/login')
       .send({
         email: adminUser.email,
         password: 'admin123',
@@ -79,12 +79,12 @@ describe('Cache Integration Tests', () => {
 
       // Make a GET request to populate cache (if enabled)
       await request(app)
-        .get('/api/users')
+        .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`);
 
       // Update the user
       const updateResponse = await request(app)
-        .put(`/api/users/${user._id}`)
+        .put(`/api/v1/users/${user._id}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           name: 'Updated Name',
@@ -102,12 +102,12 @@ describe('Cache Integration Tests', () => {
 
       // Make a GET request to populate cache (if enabled)
       await request(app)
-        .get(`/api/users/${user._id}`)
+        .get(`/api/v1/users/${user._id}`)
         .set('Authorization', `Bearer ${adminToken}`);
 
       // Delete the user
       const deleteResponse = await request(app)
-        .delete(`/api/users/${user._id}`)
+        .delete(`/api/v1/users/${user._id}`)
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(deleteResponse.status).toBe(200);
@@ -117,12 +117,12 @@ describe('Cache Integration Tests', () => {
     it('should invalidate user list cache when new user is registered', async () => {
       // Make a GET request to populate cache (if enabled)
       await request(app)
-        .get('/api/users')
+        .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`);
 
       // Register a new user
       const registerResponse = await request(app)
-        .post('/api/auth/register')
+        .post('/api/v1/auth/register')
         .send({
           email: 'new-user@test.com',
           password: 'password123',
@@ -139,7 +139,7 @@ describe('Cache Integration Tests', () => {
       // In test environment, read preference should be 'primary'
       // This is configured in database.js
       const response = await request(app)
-        .get('/api/users')
+        .get('/api/v1/users')
         .set('Authorization', `Bearer ${adminToken}`);
 
       expect(response.status).toBe(200);
@@ -150,7 +150,7 @@ describe('Cache Integration Tests', () => {
   describe('Cache Helper Functions', () => {
     it('should handle cache invalidation gracefully when Redis is not available', async () => {
       // Should not throw even if Redis is not connected
-      await expect(invalidateCache('cache:/api/users/*')).resolves.not.toThrow();
+      await expect(invalidateCache('cache:/api/v1/users/*')).resolves.not.toThrow();
     });
 
     it('should handle cache clearing gracefully when Redis is not available', async () => {

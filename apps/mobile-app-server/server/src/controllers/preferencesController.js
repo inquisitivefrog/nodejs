@@ -98,3 +98,5 @@ exports.updatePreferencesValidation = [
   body('theme').optional().isIn(['light', 'dark', 'auto']).withMessage('Theme must be light, dark, or auto'),
 ];
 
+
+
