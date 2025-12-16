@@ -225,3 +225,5 @@ Run Tests: .github#2595
 
 X Run CI Pipeline (20281512581) completed with 'failure'
 
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run watch 20281512581
+
