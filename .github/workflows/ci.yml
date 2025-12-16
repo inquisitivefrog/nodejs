@@ -166,6 +166,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
+          category: 'filesystem-scan'
         continue-on-error: true
 
       - name: Set up Docker for image scanning
@@ -217,6 +218,7 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-image-results.sarif'
+          category: 'docker-image-scan'
         continue-on-error: true
         # Only runs if file exists due to previous step check
 
@@ -253,7 +255,12 @@ jobs:
         run: |
           # Use built images from registry
           docker compose pull || echo "Images not yet available, will build locally"
-          docker compose up -d --build
+          # Start services - don't fail if health checks haven't passed yet
+          # The wait step will handle health check validation
+          docker compose up -d --build || true
+          # Give services a moment to start
+          sleep 5
+          docker compose ps
 
       - name: Wait for services to be healthy
         working-directory: apps/mobile-app-server
