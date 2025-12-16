@@ -52,9 +52,9 @@ jobs:
         working-directory: apps/mobile-app-server/server
         run: npm ci
 
-      - name: Rebuild native dependencies for Linux
+      - name: Install sharp for Linux platform
         working-directory: apps/mobile-app-server/server
-        run: npm rebuild sharp --include=optional
+        run: npm install --include=optional sharp
 
       - name: Run linter (if configured)
         working-directory: apps/mobile-app-server/server
