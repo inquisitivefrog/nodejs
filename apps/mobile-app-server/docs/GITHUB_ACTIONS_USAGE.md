@@ -235,3 +235,229 @@ Docker Compose Integration Test	Start services with Docker Compose	2025-12-16T21
 Docker Compose Integration Test	Start services with Docker Compose	2025-12-16T21:17:02.0175349Z ##[error]Process completed with exit code 1.
 (⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % 
 
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run list --limit 2     
+STATUS  TITLE                 WORKFLOW     BRANCH  EVENT  ID           ELAPSED  AGE                   
+✓       update commands used  CD Pipeline  main    push   20283394115  35s      less than a minute ago
+*       update commands used  CI Pipeline  main    push   20283394092  51s      less than a minute ago
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run watch 20283394092
+X main CI Pipeline · 20283394092
+Triggered via push about 6 minutes ago
+
+JOBS
+✓ Run Tests in 2m6s (ID 58251055684)
+  ✓ Set up job
+  ✓ Initialize containers
+  ✓ Checkout code
+  ✓ Setup Node.js
+  ✓ Install dependencies
+  ✓ Rebuild sharp for Linux platform
+  ✓ Run linter (if configured)
+  ✓ Run all tests with coverage
+  ✓ Upload coverage reports
+  ✓ Post Setup Node.js
+  ✓ Post Checkout code
+  ✓ Stop containers
+  ✓ Complete job
+✓ Security Scanning in 22s (ID 58251237299)
+  ✓ Set up job
+  ✓ Checkout code
+  ✓ Run Trivy vulnerability scanner (filesystem)
+  ✓ Upload Trivy results to GitHub Security
+  ✓ Scan Docker images (if built)
+  ✓ Upload Docker scan results
+  ✓ Post Upload Docker scan results
+  ✓ Post Scan Docker images (if built)
+  ✓ Post Upload Trivy results to GitHub Security
+  ✓ Post Run Trivy vulnerability scanner (filesystem)
+  ✓ Post Checkout code
+  ✓ Complete job
+✓ Build Docker Images (admin-dashboard) in 1m44s (ID 58251237320)
+  ✓ Set up job
+  ✓ Checkout code
+  ✓ Set up Docker Buildx
+  ✓ Log in to GitHub Container Registry
+  ✓ Extract metadata
+  ✓ Build and push Docker image
+  ✓ Post Build and push Docker image
+  ✓ Post Log in to GitHub Container Registry
+  ✓ Post Set up Docker Buildx
+  ✓ Post Checkout code
+  ✓ Complete job
+✓ Build Docker Images (server) in 29s (ID 58251237327)
+  ✓ Set up job
+  ✓ Checkout code
+  ✓ Set up Docker Buildx
+  ✓ Log in to GitHub Container Registry
+  ✓ Extract metadata
+  ✓ Build and push Docker image
+  ✓ Post Build and push Docker image
+  ✓ Post Log in to GitHub Container Registry
+  ✓ Post Set up Docker Buildx
+  ✓ Post Checkout code
+  ✓ Complete job
+✓ Build Docker Images (nginx) in 22s (ID 58251237332)
+  ✓ Set up job
+  ✓ Checkout code
+  ✓ Set up Docker Buildx
+  ✓ Log in to GitHub Container Registry
+  ✓ Extract metadata
+  ✓ Build and push Docker image
+  ✓ Post Build and push Docker image
+  ✓ Post Log in to GitHub Container Registry
+  ✓ Post Set up Docker Buildx
+  ✓ Post Checkout code
+  ✓ Complete job
+X Docker Compose Integration Test in 2m45s (ID 58251395870)
+  ✓ Set up job
+  ✓ Checkout code
+  ✓ Set up Docker Buildx
+  ✓ Log in to GitHub Container Registry
+  ✓ Create minimal .env file for CI
+  X Start services with Docker Compose
+  - Wait for services to be healthy
+  - Run health checks
+  ✓ Collect logs on failure
+  ✓ Upload logs artifact
+  ✓ Cleanup
+  ✓ Post Log in to GitHub Container Registry
+  ✓ Post Set up Docker Buildx
+  ✓ Post Checkout code
+  ✓ Complete job
+
+ANNOTATIONS
+X Path does not exist: trivy-image-results.sarif
+Security Scanning: .github#21
+
+X Process completed with exit code 1.
+Security Scanning: .github#285
+
+
+X Run CI Pipeline (20283394092) completed with 'failure'
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % 
+
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run list --limit 2
+STATUS  TITLE                                                                   WORKFLOW     BRANCH  EVENT  ID           ELAPSED  AGE               
+✓       Fix security scanning: make it depend on build job and add Docker set…  CD Pipeline  main    push   20283703443  31s      about 1 minute ago
+*       Fix security scanning: make it depend on build job and add Docker set…  CI Pipeline  main    push   20283703442  1m47s    about 1 minute ago
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run view 20283703442
+
+* main CI Pipeline · 20283703442
+Triggered via push about 2 minutes ago
+
+JOBS
+✓ Run Tests in 1m52s (ID 58252122598)
+* Build Docker Images (admin-dashboard) (ID 58252280575)
+* Build Docker Images (nginx) (ID 58252280586)
+* Build Docker Images (server) (ID 58252280590)
+
+For more information about a job, try: gh run view --job=<job-id>
+View this run on GitHub: https://github.com/inquisitivefrog/nodejs/actions/runs/20283703442
+
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run watch 20283703442 
+
+  ✓ Post Set up Docker Buildx
+  ✓ Post Checkout code
+  ✓ Complete job
+* Docker Compose Integration Test (ID 58252411138)
+  ✓ Set up job
+  ✓ Checkout code
+  ✓ Set up Docker Buildx
+  ✓ Log in to GitHub Container Registry
+  ✓ Create minimal .env file for CI
+  * Start services with Docker Compose
+  * Wait for services to be healthy
+  * Run health checks
+  * Collect logs on failure
+  * Upload logs artifact
+  * Cleanup
+  * Post Log in to GitHub Container Registry
+  * Post Set up Docker Buildx
+  * Post Checkout code
+✓ Security Scanning in 30s (ID 58252411147)
+  ✓ Set up job
+  ✓ Checkout code
+  ✓ Run Trivy vulnerability scanner (filesystem)
+  ✓ Upload Trivy results to GitHub Security
+  ✓ Set up Docker for image scanning
+  ✓ Log in to GitHub Container Registry
+  ✓ Scan Docker images
+  ✓ Upload Docker scan results
+  ✓ Post Upload Docker scan results
+  ✓ Post Scan Docker images
+  ✓ Post Log in to GitHub Container Registry
+  ✓ Post Set up Docker for image scanning
+  ✓ Post Upload Trivy results to GitHub Security
+  ✓ Post Run Trivy vulnerability scanner (filesystem)
+  ✓ Post Checkout code
+  ✓ Complete job
+
+ANNOTATIONS
+X Path does not exist: trivy-image-results.sarif
+Security Scanning: .github#21
+
+X Process completed with exit code 1.
+Security Scanning: .github#285
+
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run list --limit 2                          
+STATUS  TITLE                                                                   WORKFLOW     BRANCH  EVENT  ID           ELAPSED  AGE                
+✓       Fix security scanning: make it depend on build job and add Docker set…  CD Pipeline  main    push   20283703443  31s      about 5 minutes ago
+*       Fix security scanning: make it depend on build job and add Docker set…  CI Pipeline  main    push   20283703442  5m31s    about 5 minutes ago
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run watch 20283703443 
+Run CD Pipeline (20283703443) has already completed with 'success'
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run view 20283703443 
+
+✓ main CD Pipeline · 20283703443
+Triggered via push about 5 minutes ago
+
+JOBS
+✓ Deploy to production in 28s (ID 58252122576)
+
+For more information about the job, try: gh run view --job=58252122576
+View this run on GitHub: https://github.com/inquisitivefrog/nodejs/actions/runs/20283703443
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % 
+
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run view 20283703442
+
+X main CI Pipeline · 20283703442
+Triggered via push about 6 minutes ago
+
+JOBS
+✓ Run Tests in 1m52s (ID 58252122598)
+✓ Build Docker Images (admin-dashboard) in 26s (ID 58252280575)
+✓ Build Docker Images (nginx) in 31s (ID 58252280586)
+✓ Build Docker Images (server) in 1m29s (ID 58252280590)
+X Docker Compose Integration Test in 2m42s (ID 58252411138)
+  ✓ Set up job
+  ✓ Checkout code
+  ✓ Set up Docker Buildx
+  ✓ Log in to GitHub Container Registry
+  ✓ Create minimal .env file for CI
+  X Start services with Docker Compose
+  - Wait for services to be healthy
+  - Run health checks
+  ✓ Collect logs on failure
+  ✓ Upload logs artifact
+  ✓ Cleanup
+  ✓ Post Log in to GitHub Container Registry
+  ✓ Post Set up Docker Buildx
+  ✓ Post Checkout code
+  ✓ Complete job
+✓ Security Scanning in 30s (ID 58252411147)
+
+ANNOTATIONS
+X Process completed with exit code 1.
+Docker Compose Integration Test: .github#1080
+
+X Path does not exist: trivy-image-results.sarif
+Security Scanning: .github#21
+
+X Process completed with exit code 1.
+Security Scanning: .github#285
+
+
+ARTIFACTS
+docker-compose-logs
+
+To see what failed, try: gh run view 20283703442 --log-failed
+View this run on GitHub: https://github.com/inquisitivefrog/nodejs/actions/runs/20283703442
+
