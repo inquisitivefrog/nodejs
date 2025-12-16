@@ -227,3 +227,11 @@ X Run CI Pipeline (20281512581) completed with 'failure'
 
 (⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run watch 20281512581
 
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % gh run view 20282829600 --log-failed | tail -5 
+Docker Compose Integration Test	Start services with Docker Compose	2025-12-16T21:17:02.0124119Z  Container mobile-app-server2  Error
+Docker Compose Integration Test	Start services with Docker Compose	2025-12-16T21:17:02.0124611Z  Container mobile-app-server1  Error
+Docker Compose Integration Test	Start services with Docker Compose	2025-12-16T21:17:02.0125051Z  Container mobile-app-server3  Error
+Docker Compose Integration Test	Start services with Docker Compose	2025-12-16T21:17:02.0125662Z dependency failed to start: container mobile-app-server2 is unhealthy
+Docker Compose Integration Test	Start services with Docker Compose	2025-12-16T21:17:02.0175349Z ##[error]Process completed with exit code 1.
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air mobile-app-server % 
+
