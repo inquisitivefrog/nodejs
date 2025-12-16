@@ -50,11 +50,11 @@ jobs:
 
       - name: Install dependencies
         working-directory: apps/mobile-app-server/server
-        run: npm ci
+        run: npm ci --include=optional
 
-      - name: Install sharp for Linux platform
+      - name: Rebuild sharp for Linux platform
         working-directory: apps/mobile-app-server/server
-        run: npm install --include=optional sharp
+        run: npm rebuild sharp
 
       - name: Run linter (if configured)
         working-directory: apps/mobile-app-server/server
