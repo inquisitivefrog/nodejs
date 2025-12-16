@@ -1,0 +1,86 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ${{ github.repository }}
+
+jobs:
+  deploy:
+    name: Deploy to ${{ inputs.environment || 'production' }}
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    environment: ${{ inputs.environment || 'production' }}
+    
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine image tags
+        id: tags
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG=${GITHUB_REF#refs/tags/}
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+          else
+            echo "tag=main" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Pull latest images
+        run: |
+          TAG=${{ steps.tags.outputs.tag }}
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-server:$TAG || echo "Image not found, will build"
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-admin-dashboard:$TAG || echo "Image not found, will build"
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-nginx:$TAG || echo "Image not found, will build"
+
+      - name: Deployment notification
+        run: |
+          echo "🚀 Deployment triggered for ${{ inputs.environment || 'production' }}"
+          echo "📦 Using images tagged: ${{ steps.tags.outputs.tag }}"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "👤 Actor: ${{ github.actor }}"
+
+      # Note: Actual deployment steps would go here
+      # This is a template - customize based on your deployment target:
+      # - AWS ECS, Kubernetes, Docker Swarm, etc.
+      
+      - name: Deployment placeholder
+        run: |
+          echo "Deployment steps would be configured here"
+          echo "Options:"
+          echo "  - AWS ECS: Update service with new image"
+          echo "  - Kubernetes: kubectl set image deployment/..."
+          echo "  - Docker Swarm: docker service update --image ..."
+          echo "  - Manual: docker compose pull && docker compose up -d"
+

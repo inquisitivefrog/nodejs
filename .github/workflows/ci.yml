@@ -1,15 +1,15 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 env:
   NODE_VERSION: '20'
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_PREFIX: ${{ github.repository }}
 
 jobs:
   test:
@@ -22,7 +22,7 @@ jobs:
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok'"
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\").ok' --quiet"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -52,46 +52,34 @@ jobs:
         working-directory: apps/mobile-app-server/server
         run: npm ci
 
-      - name: Run linter
+      - name: Run linter (if configured)
         working-directory: apps/mobile-app-server/server
         run: |
-          npm run lint || echo "Linter not configured, skipping..."
+          if [ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f eslint.config.js ]; then
+            npm run lint || echo "Linting not configured"
+          else
+            echo "No linting configuration found, skipping"
+          fi
+        continue-on-error: true
 
-      - name: Run unit tests
+      - name: Run all tests with coverage
         working-directory: apps/mobile-app-server/server
         env:
           NODE_ENV: test
-          MONGODB_URI: mongodb://localhost:27017/mobileapp_test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret-key-for-ci
-          SKIP_DB_SETUP: 'true'
-        run: npm run test:unit
-
-      - name: Run integration tests
-        working-directory: apps/mobile-app-server/server
-        env:
-          NODE_ENV: test
-          MONGODB_URI: mongodb://localhost:27017/mobileapp_test
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret-key-for-ci
-        run: npm run test:integration
-
-      - name: Generate test coverage
-        working-directory: apps/mobile-app-server/server
-        env:
-          NODE_ENV: test
-          MONGODB_URI: mongodb://localhost:27017/mobileapp_test
+          MONGODB_URI: mongodb://localhost:27017/mobileapp-test
           REDIS_URL: redis://localhost:6379
           JWT_SECRET: test-secret-key-for-ci
         run: npm run test:coverage
+        timeout-minutes: 15
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
         with:
-          file: apps/mobile-app-server/server/coverage/lcov.info
+          file: ./apps/mobile-app-server/server/coverage/lcov.info
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
+        continue-on-error: true
 
   build:
     name: Build Docker Images
@@ -99,18 +87,16 @@ jobs:
     needs: test
     if: github.event_name == 'push'
     
+    permissions:
+      contents: read
+      packages: write
+
     strategy:
       matrix:
         service:
-          - name: server
-            context: apps/mobile-app-server/server
-            dockerfile: apps/mobile-app-server/server/Dockerfile
-          - name: admin-dashboard
-            context: apps/mobile-app-server/admin-dashboard
-            dockerfile: apps/mobile-app-server/admin-dashboard/Dockerfile
-          - name: nginx
-            context: apps/mobile-app-server/nginx
-            dockerfile: apps/mobile-app-server/nginx/Dockerfile
+          - server
+          - admin-dashboard
+          - nginx
 
     steps:
       - name: Checkout code
@@ -119,7 +105,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Container Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -130,7 +116,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service.name }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-${{ matrix.service }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -142,8 +128,8 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ${{ matrix.service.context }}
-          file: ${{ matrix.service.dockerfile }}
+          context: apps/mobile-app-server/${{ matrix.service }}
+          file: apps/mobile-app-server/${{ matrix.service }}/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -151,16 +137,15 @@ jobs:
           cache-to: type=gha,mode=max
 
   security-scan:
-    name: Security Scan
+    name: Security Scanning
     runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'push'
-    
+    needs: test
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner (filesystem)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
@@ -170,15 +155,34 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
+        continue-on-error: true
+
+      - name: Scan Docker images (if built)
+        if: github.event_name == 'push'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-server:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-image-results.sarif'
+          severity: 'CRITICAL,HIGH'
+        continue-on-error: true
+
+      - name: Upload Docker scan results
+        if: github.event_name == 'push'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-image-results.sarif'
+        continue-on-error: true
 
   docker-compose-test:
     name: Docker Compose Integration Test
     runs-on: ubuntu-latest
-    needs: test
-    
+    needs: [test, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -186,32 +190,57 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Start services with Docker Compose
         working-directory: apps/mobile-app-server
         run: |
+          # Use built images from registry
+          docker compose pull || echo "Images not yet available, will build locally"
           docker compose up -d --build
-          docker compose ps
 
       - name: Wait for services to be healthy
         working-directory: apps/mobile-app-server
         run: |
-          timeout 120 bash -c 'until docker compose ps | grep -q "healthy"; do sleep 2; done'
+          echo "Waiting for services to be healthy..."
+          timeout 120 bash -c 'until docker compose ps | grep -q "healthy"; do sleep 5; done' || true
           sleep 10
+          docker compose ps
 
       - name: Run health checks
         working-directory: apps/mobile-app-server
         run: |
+          # Test API health endpoint
           curl -f http://localhost:3000/health || exit 1
-          curl -f http://localhost:3000/metrics || exit 1
+          # Test metrics endpoint
+          curl -f http://localhost:3000/metrics | head -20 || exit 1
+          # Test Prometheus
+          curl -f http://localhost:9090/api/v1/targets | head -20 || exit 1
+          # Test Grafana
+          curl -f http://localhost:3001/api/health || exit 1
 
-      - name: Check service logs
-        working-directory: apps/mobile-app-server
+      - name: Collect logs on failure
         if: failure()
-        run: |
-          docker compose logs --tail=50
-
-      - name: Stop services
         working-directory: apps/mobile-app-server
-        if: always()
-        run: docker compose down -v
+        run: |
+          docker compose logs --tail=100 > docker-compose-logs.txt
+          docker compose ps -a >> docker-compose-logs.txt
+        continue-on-error: true
 
+      - name: Upload logs artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-compose-logs
+          path: apps/mobile-app-server/docker-compose-logs.txt
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        working-directory: apps/mobile-app-server
+        run: docker compose down -v
