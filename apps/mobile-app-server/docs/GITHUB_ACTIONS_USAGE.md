@@ -194,3 +194,34 @@ Run Tests	Install dependencies	2025-12-16T20:06:12.1843671Z npm error A complete
 Run Tests	Install dependencies	2025-12-16T20:06:12.1951754Z ##[error]Process completed with exit code 1.
 (⎈|N/A:N/A)tim@Timothys-MacBook-Air docs % 
 
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air nodejs % gh run list --limit 1 --json databaseId --jq '.[0].databaseId' 
+20281512581
+(⎈|N/A:N/A)tim@Timothys-MacBook-Air nodejs % gh run list --limit 1 --json databaseId --jq '.[0].databaseId' | xargs gh run watch
+X main CI Pipeline · 20281512581
+Triggered via push about 1 minute ago
+
+JOBS
+X Run Tests in 1m24s (ID 58244477557)
+  ✓ Set up job
+  ✓ Initialize containers
+  ✓ Checkout code
+  ✓ Setup Node.js
+  ✓ Install dependencies
+  ✓ Run linter (if configured)
+  X Run all tests with coverage
+  - Upload coverage reports
+  - Post Setup Node.js
+  ✓ Post Checkout code
+  ✓ Stop containers
+  ✓ Complete job
+- Build Docker Images in 0s (ID 58244603997)
+- Security Scanning in 0s (ID 58244604129)
+- Docker Compose Integration Test (ID 58244604245)
+
+ANNOTATIONS
+X Process completed with exit code 1.
+Run Tests: .github#2595
+
+
+X Run CI Pipeline (20281512581) completed with 'failure'
+
