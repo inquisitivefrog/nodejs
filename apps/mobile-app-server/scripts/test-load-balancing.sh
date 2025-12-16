@@ -40,3 +40,4 @@ docker compose logs --tail=5 server3 | grep -E "\[server3\]|Server Instance"
 
 
 
+

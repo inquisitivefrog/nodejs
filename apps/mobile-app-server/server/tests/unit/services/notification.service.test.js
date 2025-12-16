@@ -15,9 +15,19 @@ jest.mock('../../../src/models/DeviceToken', () => ({
   getActiveTokensForUser: jest.fn(),
 }));
 
+// Mock mongoose connection for connection state checks
+const mockMongoose = {
+  connection: {
+    readyState: 1, // 1 = connected
+  },
+};
+jest.mock('mongoose', () => mockMongoose);
+
 describe('Notification Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Ensure mongoose connection is mocked as connected
+    mockMongoose.connection.readyState = 1;
   });
 
   describe('sendNotification', () => {
@@ -67,6 +77,7 @@ describe('Notification Service', () => {
 
       await NotificationService.sendNotification('user123', 'Test Title', 'Test Body');
 
+      expect(DeviceToken.getActiveTokensForUser).toHaveBeenCalledWith('user123');
       expect(enqueueJob).toHaveBeenCalledWith(
         QUEUE_NAMES.NOTIFICATION,
         expect.objectContaining({
@@ -74,6 +85,26 @@ describe('Notification Service', () => {
         }),
         { priority: 5 }
       );
+    });
+
+    it('should use empty array if connection is not ready', async () => {
+      // Mock connection as not ready
+      mockMongoose.connection.readyState = 0; // 0 = disconnected
+
+      await NotificationService.sendNotification('user123', 'Test Title', 'Test Body');
+
+      // Should not call DeviceToken query when connection not ready
+      expect(DeviceToken.getActiveTokensForUser).not.toHaveBeenCalled();
+      expect(enqueueJob).toHaveBeenCalledWith(
+        QUEUE_NAMES.NOTIFICATION,
+        expect.objectContaining({
+          deviceTokens: [],
+        }),
+        { priority: 5 }
+      );
+
+      // Restore connection state
+      mockMongoose.connection.readyState = 1;
     });
   });
 
@@ -146,6 +177,7 @@ describe('Notification Service', () => {
     });
   });
 });
+
 
 
 

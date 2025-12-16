@@ -51,3 +51,4 @@ scrape_configs:
           service: 'nginx-loadbalancer'
           environment: 'development'
 
+

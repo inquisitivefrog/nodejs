@@ -5,3 +5,4 @@ docker compose -f docker-compose.sharding.yml exec mongos1 mongosh "mongodb://ad
 
 
 
+

@@ -32,6 +32,26 @@ if (process.env.SKIP_DB_SETUP === 'true' || process.env.SKIP_DB_SETUP === '1') {
   // Close database and Redis connections after all tests
   afterAll(async () => {
     try {
+      // Close queue connections first (BullMQ)
+      try {
+        const { closeQueues } = require('../src/config/queue');
+        await closeQueues();
+        // Give queues time to close gracefully
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (err) {
+        // Ignore queue close errors (may not be initialized in tests)
+      }
+
+      // Close database pool connections (read/write pools)
+      try {
+        const { closePools } = require('../src/config/database-pools');
+        await closePools();
+        // Give pools time to close gracefully
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (err) {
+        // Ignore pool close errors (may not be initialized in tests)
+      }
+
       // Close Redis connection if it exists
       try {
         const { disconnectRedis } = require('../src/config/redis');
@@ -85,7 +105,7 @@ if (process.env.SKIP_DB_SETUP === 'true' || process.env.SKIP_DB_SETUP === '1') {
       await mongoose.disconnect();
       
       // Give a small delay to ensure all cleanup is complete
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 200));
     } catch (error) {
       // Ignore errors during cleanup, but ensure we still disconnect
       try {
@@ -94,5 +114,5 @@ if (process.env.SKIP_DB_SETUP === 'true' || process.env.SKIP_DB_SETUP === '1') {
         // Final fallback - ignore all errors
       }
     }
-  }, 15000); // Increase timeout to 15 seconds
+  }, 20000); // Increase timeout to 20 seconds for complete cleanup
 }

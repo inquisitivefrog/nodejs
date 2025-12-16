@@ -14,7 +14,8 @@
     "test:watch": "node --max-old-space-size=4096 node_modules/.bin/jest --watchAll",
     "test:coverage": "node --max-old-space-size=4096 node_modules/.bin/jest --coverage",
     "test:performance": "node --max-old-space-size=4096 node_modules/.bin/jest tests/performance",
-    "create-admin": "node scripts/createAdmin.js"
+    "create-admin": "node scripts/createAdmin.js",
+    "verify-services": "node ../scripts/verify-services.js"
   },
   "keywords": [
     "express",
